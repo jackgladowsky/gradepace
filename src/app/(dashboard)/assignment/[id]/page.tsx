@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getAssignment, getCourses } from "@/lib/canvas";
 import Link from "next/link";
 import AnalyzeButton from "./analyze-button";
+import AssignmentChecklist from "@/components/assignment-checklist";
 
 function cleanCourseName(name: string) {
   return name
@@ -121,6 +122,18 @@ export default async function AssignmentPage({
           </div>
         </section>
       )}
+
+      {/* Checklist */}
+      <AssignmentChecklist
+        assignmentId={assignment.id}
+        courseId={courseId}
+        courseName={courseName}
+        assignmentName={assignment.name}
+        dueAt={assignment.due_at}
+        pointsPossible={assignment.points_possible}
+        description={assignment.description}
+        rubric={assignment.rubric}
+      />
 
       {/* AI Analyze */}
       <section className="mb-8">
