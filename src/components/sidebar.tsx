@@ -54,6 +54,15 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
+  {
+    label: "Notes",
+    href: "/notes",
+    icon: (
+      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 3.487a1.5 1.5 0 0 1 2.122 0l.707.707a1.5 1.5 0 0 1 0 2.122L8.457 17.551a3 3 0 0 1-1.29.776l-2.917.97.97-2.917a3 3 0 0 1 .776-1.29L16.862 3.487ZM15 5.25l3.75 3.75" />
+      </svg>
+    ),
+  },
 ];
 
 export function SidebarLayout({ courses, userName, children }: SidebarProps) {

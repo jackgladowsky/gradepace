@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCourses, getAssignments, type CanvasAssignment } from "@/lib/canvas";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { CourseNotes } from "@/components/course-notes";
 
 function cleanCourseName(name: string) {
   return name
@@ -60,6 +61,17 @@ export default async function CoursePage({
   }
 
   const assignments = await getAssignments(canvasUrl, canvasToken, courseId);
+
+  // Build a simplified courses list for notes course selector
+  const withEnrollments = courses.filter(
+    (c) => c.enrollments && c.enrollments.length > 0
+  );
+  const maxTermId = Math.max(
+    ...withEnrollments.map((c) => c.enrollment_term_id || 0)
+  );
+  const simpleCourses = withEnrollments
+    .filter((c) => c.enrollment_term_id === maxTermId)
+    .map((c) => ({ id: c.id, name: cleanCourseName(c.name) }));
   const enrollment = course.enrollments?.[0];
   const score = enrollment?.computed_current_score;
   const grade = enrollment?.computed_current_grade;
@@ -161,6 +173,13 @@ export default async function CoursePage({
           </div>
         </section>
       )}
+
+      {/* Notes */}
+      <CourseNotes
+        courseId={courseId}
+        courseName={cleanCourseName(course.name)}
+        courses={simpleCourses}
+      />
     </div>
   );
 }
