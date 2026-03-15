@@ -34,7 +34,7 @@ export default function ConnectPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <Link href="/" className="text-sm font-semibold tracking-tight">
-            StudyHub
+            GradePace
           </Link>
           <p className="mt-2 text-sm text-muted-foreground">
             Connect your Canvas account

@@ -15,8 +15,8 @@ const newsreader = Newsreader({
 });
 
 export const metadata: Metadata = {
-  title: "StudyHub",
-  description: "A better dashboard for Canvas LMS with AI features",
+  title: "GradePace",
+  description: "A better dashboard for your courses, assignments, and grades",
 };
 
 export default function RootLayout({
