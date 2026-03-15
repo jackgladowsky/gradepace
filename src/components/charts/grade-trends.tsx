@@ -202,11 +202,13 @@ export function GradeTrendOverlay({ courses }: { courses: CourseTrendData[] }) {
                 boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
               }}
               labelStyle={{ color: "var(--foreground)", fontWeight: 500 }}
-              formatter={(value: number, name: string) => {
+              formatter={(value: unknown, name: unknown) => {
+                const v = typeof value === "number" ? value : 0;
+                const n = typeof name === "string" ? name : "";
                 const course = courses.find(
-                  (c) => `course_${c.courseId}` === name
+                  (c) => `course_${c.courseId}` === n
                 );
-                return [`${value.toFixed(1)}%`, course?.courseName ?? name];
+                return [`${v.toFixed(1)}%`, course?.courseName ?? n];
               }}
             />
             {courses.map((course, i) => {
@@ -286,8 +288,9 @@ export function GradeDistribution({ courses }: { courses: CourseTrendData[] }) {
                       fontSize: 12,
                       boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
                     }}
-                    formatter={(_: unknown, __: unknown, props: { payload: { name: string; score: number; possible: number } }) => {
-                      const p = props.payload;
+                    formatter={(_: unknown, __: unknown, props: { payload?: { name: string; score: number; possible: number } }) => {
+                      const p = props?.payload;
+                      if (!p) return ["", ""];
                       return [`${p.score}/${p.possible}`, p.name];
                     }}
                   />
