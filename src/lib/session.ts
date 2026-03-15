@@ -7,15 +7,22 @@ export interface SessionData {
   userName?: string;
 }
 
+function getSessionPassword(): string {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error("SESSION_SECRET must be set and at least 32 characters long");
+  }
+  return secret;
+}
+
 const sessionOptions: SessionOptions = {
-  password:
-    process.env.SESSION_SECRET ||
-    "complex_password_at_least_32_characters_long_for_dev",
-  cookieName: "studyhub_session",
+  password: getSessionPassword(),
+  cookieName: "gradepace_session",
   cookieOptions: {
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
     sameSite: "lax" as const,
+    maxAge: 60 * 60 * 24 * 30, // 30 days
   },
 };
 

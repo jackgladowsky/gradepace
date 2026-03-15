@@ -11,6 +11,22 @@ export async function connect(formData: FormData) {
     return { error: "Canvas URL and API token are required." };
   }
 
+  // Validate URL: must be HTTPS and an Instructure domain
+  let parsed: URL;
+  try {
+    parsed = new URL(canvasUrl);
+  } catch {
+    return { error: "Invalid Canvas URL." };
+  }
+
+  if (parsed.protocol !== "https:") {
+    return { error: "Canvas URL must use HTTPS." };
+  }
+
+  if (!parsed.hostname.endsWith(".instructure.com")) {
+    return { error: "Canvas URL must be an instructure.com domain." };
+  }
+
   try {
     const profile = await validateToken(canvasUrl, canvasToken);
     const session = await getSession();
