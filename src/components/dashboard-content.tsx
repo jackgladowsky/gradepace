@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { WorkloadChart, type WeekBucket } from "@/components/charts/workload-chart";
 import { CompletionRing, type CompletionData } from "@/components/charts/completion-ring";
-import { getOverrides } from "@/lib/assignment-overrides";
+import { getOverrides, setOverride } from "@/lib/assignment-overrides";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -142,6 +142,14 @@ export function DashboardContent({
 
   const isDone = (id: number) => overrides[String(id)]?.markedDone ?? false;
 
+  const toggleOverride = useCallback((e: React.MouseEvent, assignmentId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const current = overrides[String(assignmentId)]?.markedDone ?? false;
+    setOverride(assignmentId, !current);
+    setOverridesState(getOverrides());
+  }, [overrides]);
+
   /* --- Stats -------------------------------------------------------- */
   const stats = useMemo(() => {
     const today = new Date(now);
@@ -274,23 +282,30 @@ export function DashboardContent({
 
       {/* ---- Up Next ------------------------------------------------- */}
       {nextUp && nextUpMeta ? (
-        <Link href={`/assignment/${nextUp.id}?courseId=${nextUp.course_id}`}>
-          <div className={`card-lift mb-8 rounded-xl border border-border/50 border-l-4 ${nextUpMeta.border} bg-card p-5`}>
-            <div className="flex items-center justify-between">
-              <span className={`text-[11px] font-bold uppercase tracking-wider ${nextUpMeta.text}`}>
-                {nextUpMeta.label}
-              </span>
-              <span className={`text-sm font-semibold tabular-nums ${nextUpMeta.text}`}>
-                {nextUpMeta.relTime}
-              </span>
-            </div>
-            <p className="mt-2.5 text-lg font-semibold tracking-tight">{nextUp.name}</p>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {courseNameMap[nextUp.course_id]}
-              {nextUp.points_possible != null && ` \u00b7 ${nextUp.points_possible} pts`}
-            </p>
+        <div className={`card-lift mb-8 rounded-xl border border-border/50 border-l-4 ${nextUpMeta.border} bg-card p-5`}>
+          <div className="flex items-start gap-4">
+            <button
+              onClick={(e) => toggleOverride(e, nextUp.id)}
+              className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-muted-foreground/30 transition-colors hover:border-emerald-500 hover:bg-emerald-500/10"
+              title="Mark as done"
+            />
+            <Link href={`/assignment/${nextUp.id}?courseId=${nextUp.course_id}`} className="min-w-0 flex-1">
+              <div className="flex items-center justify-between">
+                <span className={`text-[11px] font-bold uppercase tracking-wider ${nextUpMeta.text}`}>
+                  {nextUpMeta.label}
+                </span>
+                <span className={`text-sm font-semibold tabular-nums ${nextUpMeta.text}`}>
+                  {nextUpMeta.relTime}
+                </span>
+              </div>
+              <p className="mt-2.5 text-lg font-semibold tracking-tight">{nextUp.name}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                {courseNameMap[nextUp.course_id]}
+                {nextUp.points_possible != null && ` \u00b7 ${nextUp.points_possible} pts`}
+              </p>
+            </Link>
           </div>
-        </Link>
+        </div>
       ) : (
         <div className="card-lift mb-8 rounded-xl border border-border/50 border-l-4 border-l-emerald-500 bg-card p-5">
           <div className="flex items-center gap-2.5">
@@ -421,6 +436,7 @@ export function DashboardContent({
               label="Today"
               items={groups.today}
               courseNameMap={courseNameMap}
+              onToggle={toggleOverride}
               labelClass="text-red-600 dark:text-red-400"
               countClass="bg-red-500/10 text-red-600 dark:text-red-400"
               borderClass="border-red-500/20"
@@ -430,6 +446,7 @@ export function DashboardContent({
               label="Tomorrow"
               items={groups.tomorrow}
               courseNameMap={courseNameMap}
+              onToggle={toggleOverride}
               labelClass="text-orange-600 dark:text-orange-400"
               countClass="bg-orange-500/10 text-orange-600 dark:text-orange-400"
               borderClass="border-orange-500/15"
@@ -439,6 +456,7 @@ export function DashboardContent({
               label="This Week"
               items={groups.thisWeek}
               courseNameMap={courseNameMap}
+              onToggle={toggleOverride}
               labelClass="text-muted-foreground"
               countClass="bg-muted text-muted-foreground"
               borderClass="border-border/50"
@@ -448,6 +466,7 @@ export function DashboardContent({
               label="Later"
               items={groups.later}
               courseNameMap={courseNameMap}
+              onToggle={toggleOverride}
               labelClass="text-muted-foreground"
               countClass="bg-muted text-muted-foreground"
               borderClass="border-border/50"
@@ -475,6 +494,7 @@ function UpcomingGroup({
   showTime,
   showDate,
   limit,
+  onToggle,
 }: {
   label: string;
   items: Assignment[];
@@ -485,6 +505,7 @@ function UpcomingGroup({
   showTime?: boolean;
   showDate?: boolean;
   limit?: number;
+  onToggle: (e: React.MouseEvent, id: number) => void;
 }) {
   if (items.length === 0) return null;
   const visible = limit ? items.slice(0, limit) : items;
@@ -500,8 +521,13 @@ function UpcomingGroup({
       </div>
       <div className={`rounded-xl border ${borderClass} bg-card card-lift`}>
         {visible.map((a, i) => (
-          <Link key={a.id} href={`/assignment/${a.id}?courseId=${a.course_id}`}>
-            <div className={`flex items-center gap-4 px-4 py-3 transition-colors hover:bg-accent/30 ${i > 0 ? "border-t border-border/50" : ""}`}>
+          <div key={a.id} className={`flex items-center gap-3 px-4 py-3 transition-colors hover:bg-accent/30 ${i > 0 ? "border-t border-border/50" : ""}`}>
+            <button
+              onClick={(e) => onToggle(e, a.id)}
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-muted-foreground/30 transition-colors hover:border-emerald-500 hover:bg-emerald-500/10"
+              title="Mark as done"
+            />
+            <Link href={`/assignment/${a.id}?courseId=${a.course_id}`} className="flex min-w-0 flex-1 items-center gap-4">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{a.name}</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">{courseNameMap[a.course_id]}</p>
@@ -517,8 +543,8 @@ function UpcomingGroup({
                   <p className="text-[11px] text-muted-foreground">{a.points_possible} pts</p>
                 )}
               </div>
-            </div>
-          </Link>
+            </Link>
+          </div>
         ))}
         {overflow > 0 && (
           <Link href="/assignments">

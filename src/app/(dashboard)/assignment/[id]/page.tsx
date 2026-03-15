@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getAssignment, getCourses } from "@/lib/canvas";
 import Link from "next/link";
 import AnalyzeButton from "./analyze-button";
+import { AssignmentOverrideButton } from "@/components/assignment-override-button";
 
 function cleanCourseName(name: string) {
   return name
@@ -84,6 +85,9 @@ export default async function AssignmentPage({
               Score: {sub.score}/{assignment.points_possible}
             </span>
           )}
+        </div>
+        <div className="mt-3">
+          <AssignmentOverrideButton assignmentId={assignment.id} />
         </div>
       </div>
 
