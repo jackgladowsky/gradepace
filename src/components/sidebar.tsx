@@ -47,6 +47,15 @@ const MAIN_NAV: NavItem[] = [
     ),
   },
   {
+    label: "Grades",
+    href: "/grades",
+    icon: (
+      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+      </svg>
+    ),
+  },
+  {
     label: "Calendar",
     href: "/calendar",
     icon: (
@@ -55,9 +64,6 @@ const MAIN_NAV: NavItem[] = [
       </svg>
     ),
   },
-];
-
-const GRADES_NAV: NavItem[] = [
   {
     label: "Courses",
     href: "/courses",
@@ -67,12 +73,15 @@ const GRADES_NAV: NavItem[] = [
       </svg>
     ),
   },
+];
+
+const TOOLS_NAV: NavItem[] = [
   {
-    label: "Grades",
-    href: "/grades",
+    label: "GPA",
+    href: "/gpa",
     icon: (
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V13.5Zm0 2.25h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V18Zm2.498-6.75h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V13.5Zm0 2.25h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V18Zm2.504-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5Zm0 2.25h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V18Zm2.498-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5ZM8.25 6h7.5v2.25h-7.5V6ZM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 0 0 2.25 2.25h10.5a2.25 2.25 0 0 0 2.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0 0 12 2.25Z" />
       </svg>
     ),
   },
@@ -86,17 +95,14 @@ const GRADES_NAV: NavItem[] = [
     ),
   },
   {
-    label: "GPA",
-    href: "/gpa",
+    label: "Calculator",
+    href: "/calculator",
     icon: (
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V13.5Zm0 2.25h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V18Zm2.498-6.75h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V13.5Zm0 2.25h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V18Zm2.504-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5Zm0 2.25h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V18Zm2.498-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5ZM8.25 6h7.5v2.25h-7.5V6ZM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 0 0 2.25 2.25h10.5a2.25 2.25 0 0 0 2.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0 0 12 2.25Z" />
       </svg>
     ),
   },
-];
-
-const TOOLS_NAV: NavItem[] = [
   {
     label: "Priorities",
     href: "/priorities",
@@ -112,15 +118,6 @@ const TOOLS_NAV: NavItem[] = [
     icon: (
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-      </svg>
-    ),
-  },
-  {
-    label: "Calculator",
-    href: "/calculator",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V13.5Zm0 2.25h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V18Zm2.498-6.75h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V13.5Zm0 2.25h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V18Zm2.504-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5ZM8.25 6h7.5v2.25h-7.5V6ZM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 0 0 2.25 2.25h10.5a2.25 2.25 0 0 0 2.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0 0 12 2.25Z" />
       </svg>
     ),
   },
@@ -151,12 +148,11 @@ const TOOLS_NAV: NavItem[] = [
 const STORAGE_KEY = "studyhub_sidebar";
 
 interface SidebarState {
-  grades: boolean;
   tools: boolean;
   courses: boolean;
 }
 
-const DEFAULTS: SidebarState = { grades: true, tools: false, courses: true };
+const DEFAULTS: SidebarState = { tools: false, courses: true };
 
 function loadSidebarState(): SidebarState {
   if (typeof window === "undefined") return DEFAULTS;
@@ -239,10 +235,8 @@ export function SidebarLayout({ courses, userName, children }: SidebarProps) {
 
   // Auto-expand a section if the current page is inside it
   useEffect(() => {
-    const inGrades = GRADES_NAV.some((item) => isActive(item.href));
     const inTools = TOOLS_NAV.some((item) => isActive(item.href));
     const inCourse = pathname.startsWith("/course/");
-    if (inGrades && !sections.grades) toggle("grades");
     if (inTools && !sections.tools) toggle("tools");
     if (inCourse && !sections.courses) toggle("courses");
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -269,49 +263,9 @@ export function SidebarLayout({ courses, userName, children }: SidebarProps) {
           ))}
         </div>
 
-        {/* Grades section */}
-        <div className="mt-5">
-          <button
-            onClick={() => toggle("grades")}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 transition-colors hover:bg-accent/50"
-          >
-            <Chevron open={sections.grades} />
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Grades
-            </span>
-          </button>
-          {sections.grades && (
-            <div className="mt-1 space-y-0.5">
-              {GRADES_NAV.map((item) => (
-                <NavLink key={item.href} item={item} />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Tools section */}
-        <div className="mt-3">
-          <button
-            onClick={() => toggle("tools")}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 transition-colors hover:bg-accent/50"
-          >
-            <Chevron open={sections.tools} />
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Tools
-            </span>
-          </button>
-          {sections.tools && (
-            <div className="mt-1 space-y-0.5">
-              {TOOLS_NAV.map((item) => (
-                <NavLink key={item.href} item={item} />
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* Course list */}
         {courses.length > 0 && (
-          <div className="mt-3">
+          <div className="mt-5">
             <button
               onClick={() => toggle("courses")}
               className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 transition-colors hover:bg-accent/50"
@@ -341,6 +295,26 @@ export function SidebarLayout({ courses, userName, children }: SidebarProps) {
             )}
           </div>
         )}
+
+        {/* Tools section */}
+        <div className="mt-3">
+          <button
+            onClick={() => toggle("tools")}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 transition-colors hover:bg-accent/50"
+          >
+            <Chevron open={sections.tools} />
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Tools
+            </span>
+          </button>
+          {sections.tools && (
+            <div className="mt-1 space-y-0.5">
+              {TOOLS_NAV.map((item) => (
+                <NavLink key={item.href} item={item} />
+              ))}
+            </div>
+          )}
+        </div>
       </nav>
 
       {/* Footer */}

@@ -121,7 +121,7 @@ export default async function GradesPage() {
                     <div className="mt-3 space-y-1">
                       {graded.slice(0, 3).map((a) => (
                         <div key={a.id} className="flex items-center justify-between text-xs">
-                          <span className="truncate text-muted-foreground">{a.name}</span>
+                          <Link href={`/assignment/${a.id}?courseId=${course.id}`} className="truncate text-muted-foreground hover:text-foreground transition-colors" onClick={(e) => e.stopPropagation()}>{a.name}</Link>
                           {a.submission?.score != null && (
                             <span className="shrink-0 tabular-nums font-medium">
                               {a.submission.score}<span className="text-muted-foreground font-normal">/{a.points_possible}</span>

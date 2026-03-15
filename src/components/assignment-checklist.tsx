@@ -78,9 +78,6 @@ interface AssignmentChecklistProps {
   courseName: string;
   assignmentName: string;
   dueAt: string | null;
-  pointsPossible: number | null;
-  description: string | null;
-  rubric?: { description: string; points: number; long_description?: string }[];
 }
 
 export default function AssignmentChecklist({
@@ -89,14 +86,9 @@ export default function AssignmentChecklist({
   courseName,
   assignmentName,
   dueAt,
-  pointsPossible,
-  description,
-  rubric,
 }: AssignmentChecklistProps) {
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [newText, setNewText] = useState("");
-  const [generating, setGenerating] = useState(false);
-  const [genError, setGenError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Load from localStorage on mount
@@ -149,51 +141,6 @@ export default function AssignmentChecklist({
     [items, persist]
   );
 
-  const generateChecklist = useCallback(async () => {
-    setGenerating(true);
-    setGenError(null);
-
-    try {
-      const res = await fetch("/api/ai/checklist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          courseName,
-          name: assignmentName,
-          dueAt,
-          pointsPossible,
-          description,
-          rubric,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `Failed: ${res.status}`);
-      }
-
-      const data = await res.json();
-      const steps: string[] = data.steps || [];
-
-      if (steps.length === 0) {
-        throw new Error("No steps generated");
-      }
-
-      // Merge with existing items (don't replace)
-      const newItems: ChecklistItem[] = steps.map((text) => ({
-        id: crypto.randomUUID(),
-        text,
-        done: false,
-      }));
-
-      persist([...items, ...newItems]);
-    } catch (e) {
-      setGenError(e instanceof Error ? e.message : "Failed to generate checklist");
-    } finally {
-      setGenerating(false);
-    }
-  }, [courseName, assignmentName, dueAt, pointsPossible, description, rubric, items, persist]);
-
   const doneCount = items.filter((it) => it.done).length;
   const totalCount = items.length;
   const progressPct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
@@ -209,18 +156,7 @@ export default function AssignmentChecklist({
             </span>
           )}
         </h2>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={generateChecklist}
-          disabled={generating}
-          className="text-xs"
-        >
-          {generating ? "Generating..." : "Generate checklist"}
-        </Button>
       </div>
-
-      {genError && <p className="mb-2 text-sm text-destructive">{genError}</p>}
 
       {/* Progress bar */}
       {totalCount > 0 && (
@@ -276,10 +212,10 @@ export default function AssignmentChecklist({
       )}
 
       {/* Empty state */}
-      {totalCount === 0 && !genError && (
+      {totalCount === 0 && (
         <div className="mb-3 rounded-lg border border-dashed py-6 text-center">
           <p className="text-xs text-muted-foreground">
-            Break this assignment into subtasks, or generate a checklist with AI
+            Break this assignment into subtasks
           </p>
         </div>
       )}

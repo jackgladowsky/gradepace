@@ -2,7 +2,6 @@ import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { getAssignment, getCourses } from "@/lib/canvas";
 import Link from "next/link";
-import AnalyzeButton from "./analyze-button";
 import { AssignmentOverrideButton } from "@/components/assignment-override-button";
 
 function cleanCourseName(name: string) {
@@ -125,20 +124,6 @@ export default async function AssignmentPage({
           </div>
         </section>
       )}
-
-      {/* AI Analyze */}
-      <section className="mb-8">
-        <AnalyzeButton
-          assignmentId={assignment.id}
-          courseId={courseId}
-          courseName={courseName}
-          assignmentName={assignment.name}
-          dueAt={assignment.due_at}
-          pointsPossible={assignment.points_possible}
-          description={assignment.description}
-          rubric={assignment.rubric}
-        />
-      </section>
 
       {/* Canvas Link */}
       <a

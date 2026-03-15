@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getOverrides, setOverride as setOverrideStorage } from "@/lib/assignment-overrides";
 
@@ -373,10 +374,10 @@ export function WeekCalendar({ assignments, courseMap }: WeekCalendarProps) {
                         const status = submissionLabel(a, isDone(a.id));
                         return (
                           <div key={a.id} className={`rounded-lg border px-3 py-2 ${color.bg} ${color.border}`}>
-                            <p className={`text-sm font-medium ${color.text}`}>{a.name}</p>
-                            <p className="mt-0.5 text-xs text-muted-foreground">
+                            <Link href={`/assignment/${a.id}?courseId=${a.course_id}`} className={`text-sm font-medium hover:underline ${color.text}`}>{a.name}</Link>
+                            <Link href={`/course/${a.course_id}`} className="mt-0.5 block text-xs text-muted-foreground hover:text-foreground transition-colors">
                               {courseMap[a.course_id] || "Unknown course"}
-                            </p>
+                            </Link>
                             <p className="text-xs text-muted-foreground">
                               {a.due_at && formatTime(a.due_at)}
                               {a.points_possible != null && ` \u00b7 ${a.points_possible} pts`}
@@ -448,8 +449,8 @@ export function WeekCalendar({ assignments, courseMap }: WeekCalendarProps) {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <p className={`font-medium ${isDone(a.id) ? "line-through text-muted-foreground" : color.text}`}>{a.name}</p>
-                              <p className="mt-0.5 text-xs text-muted-foreground">{courseMap[a.course_id] || "Unknown course"}</p>
+                              <Link href={`/assignment/${a.id}?courseId=${a.course_id}`} className={`font-medium hover:underline ${isDone(a.id) ? "line-through text-muted-foreground" : color.text}`}>{a.name}</Link>
+                              <Link href={`/course/${a.course_id}`} className="mt-0.5 block text-xs text-muted-foreground hover:text-foreground transition-colors">{courseMap[a.course_id] || "Unknown course"}</Link>
                             </div>
                             <div className="shrink-0 text-right">
                               {a.due_at && <p className="text-xs font-medium tabular-nums">{formatTime(a.due_at)}</p>}
@@ -491,12 +492,12 @@ export function WeekCalendar({ assignments, courseMap }: WeekCalendarProps) {
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Courses</p>
             <div className="space-y-1.5">
               {Object.entries(courseColorMap).map(([courseId, color]) => (
-                <div key={courseId} className="flex items-center gap-2">
+                <Link key={courseId} href={`/course/${courseId}`} className="flex items-center gap-2 transition-colors hover:bg-accent/50 rounded-md -mx-1 px-1 py-0.5">
                   <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${color.dot}`} />
                   <span className="truncate text-xs text-muted-foreground">
                     {courseMap[Number(courseId)] || `Course ${courseId}`}
                   </span>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
