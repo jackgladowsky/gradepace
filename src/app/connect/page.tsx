@@ -66,9 +66,19 @@ export default function ConnectPage() {
                 placeholder="Paste your token here"
                 required
               />
-              <p className="text-[11px] text-muted-foreground">
-                Canvas &rarr; Account &rarr; Settings &rarr; New Access Token
-              </p>
+              <details className="group mt-0.5">
+                <summary className="cursor-pointer text-[11px] text-muted-foreground hover:text-foreground transition-colors">
+                  How do I get a token?
+                </summary>
+                <ol className="mt-2 space-y-1.5 text-[11px] text-muted-foreground list-decimal list-inside">
+                  <li>Log in to Canvas and click <strong className="text-foreground">Account</strong> (top-left)</li>
+                  <li>Go to <strong className="text-foreground">Settings</strong></li>
+                  <li>Scroll to <strong className="text-foreground">Approved Integrations</strong></li>
+                  <li>Click <strong className="text-foreground">+ New Access Token</strong></li>
+                  <li>Name it anything (e.g. &ldquo;GradePace&rdquo;) and click <strong className="text-foreground">Generate Token</strong></li>
+                  <li>Copy the token and paste it above</li>
+                </ol>
+              </details>
             </div>
             {error && (
               <p className="text-sm text-destructive">{error}</p>
