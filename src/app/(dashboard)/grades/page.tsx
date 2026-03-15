@@ -76,7 +76,7 @@ export default async function GradesPage() {
       </div>
 
       {/* Overall average */}
-      <div className="mb-8 rounded-xl border border-border/50 bg-card px-6 py-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none">
+      <div className="mb-8 rounded-xl border border-border/50 bg-card px-6 py-5 card-lift">
         <p className="text-xs font-medium text-muted-foreground">Overall Average</p>
         <div className="mt-1 flex items-baseline gap-2">
           <span className={`text-3xl font-semibold tabular-nums ${getGradeColor(overallAvg)}`}>

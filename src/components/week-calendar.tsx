@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { getOverrides, setOverride as setOverrideStorage } from "@/lib/assignment-overrides";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -88,7 +89,8 @@ function formatTime(dateStr: string): string {
 /*  Submission status badge                                            */
 /* ------------------------------------------------------------------ */
 
-function submissionLabel(a: CalendarAssignment): { label: string; className: string } | null {
+function submissionLabel(a: CalendarAssignment, markedDone: boolean): { label: string; className: string } | null {
+  if (markedDone) return { label: "Done", className: "text-emerald-600 dark:text-emerald-400" };
   const sub = a.submission;
   if (!sub) return null;
   if (sub.missing) return { label: "Missing", className: "text-red-600 dark:text-red-400" };
@@ -130,7 +132,7 @@ function MiniMonth({
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
   return (
-    <div className="rounded-xl border border-border/50 bg-card p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none">
+    <div className="rounded-xl border border-border/50 bg-card p-3 card-lift">
       <p className="mb-2 text-center text-xs font-semibold text-muted-foreground">
         {MONTH_NAMES[month]} {year}
       </p>
@@ -182,6 +184,21 @@ export function WeekCalendar({ assignments, courseMap }: WeekCalendarProps) {
 
   const [weekOffset, setWeekOffset] = useState(0);
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
+  const [overrides, setOverrides] = useState<Record<string, { markedDone: boolean }>>({});
+
+  useEffect(() => {
+    setOverrides(getOverrides());
+  }, []);
+
+  const toggleOverride = useCallback((e: React.MouseEvent, assignmentId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const current = overrides[String(assignmentId)]?.markedDone ?? false;
+    setOverrideStorage(assignmentId, !current);
+    setOverrides(getOverrides());
+  }, [overrides]);
+
+  const isDone = (id: number) => overrides[String(id)]?.markedDone ?? false;
 
   const monday = useMemo(() => addDays(getMonday(today), weekOffset * 7), [today, weekOffset]);
 
@@ -285,7 +302,7 @@ export function WeekCalendar({ assignments, courseMap }: WeekCalendarProps) {
                   <div className="flex flex-1 flex-col gap-1">
                     {dayAssignments.slice(0, 4).map((a) => {
                       const color = courseColorMap[a.course_id] || COURSE_COLORS[0];
-                      const status = submissionLabel(a);
+                      const status = submissionLabel(a, isDone(a.id));
                       return (
                         <div
                           key={a.id}
@@ -353,7 +370,7 @@ export function WeekCalendar({ assignments, courseMap }: WeekCalendarProps) {
                     <div className="mt-1 space-y-1 pl-4">
                       {dayAssignments.map((a) => {
                         const color = courseColorMap[a.course_id] || COURSE_COLORS[0];
-                        const status = submissionLabel(a);
+                        const status = submissionLabel(a, isDone(a.id));
                         return (
                           <div key={a.id} className={`rounded-lg border px-3 py-2 ${color.bg} ${color.border}`}>
                             <p className={`text-sm font-medium ${color.text}`}>{a.name}</p>
@@ -379,7 +396,7 @@ export function WeekCalendar({ assignments, courseMap }: WeekCalendarProps) {
 
           {/* Day detail panel (desktop) */}
           {expandedDay && (assignmentsByDate[expandedDay] || []).length > 0 && (
-            <div className="mt-4 hidden rounded-xl border border-border/50 bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none md:block">
+            <div className="mt-4 hidden rounded-xl border border-border/50 bg-card p-4 card-lift md:block">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-sm font-semibold">
                   {(() => {
@@ -400,24 +417,52 @@ export function WeekCalendar({ assignments, courseMap }: WeekCalendarProps) {
               <div className="space-y-2">
                 {(assignmentsByDate[expandedDay] || []).map((a) => {
                   const color = courseColorMap[a.course_id] || COURSE_COLORS[0];
-                  const status = submissionLabel(a);
+                  const status = submissionLabel(a, isDone(a.id));
                   return (
                     <div key={a.id} className={`rounded-lg border px-4 py-3 ${color.bg} ${color.border}`}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className={`font-medium ${color.text}`}>{a.name}</p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">{courseMap[a.course_id] || "Unknown course"}</p>
-                        </div>
-                        <div className="shrink-0 text-right">
-                          {a.due_at && <p className="text-xs font-medium tabular-nums">{formatTime(a.due_at)}</p>}
-                          {a.points_possible != null && (
-                            <p className="text-xs text-muted-foreground">{a.points_possible} pts</p>
+                      <div className="flex items-start gap-3">
+                        {(() => {
+                          const markedDone = isDone(a.id);
+                          const sub = a.submission;
+                          const canOverride = !!(sub?.missing || sub?.late || (!sub?.submitted_at && sub?.workflow_state !== "graded"));
+                          const showToggle = canOverride || markedDone;
+                          if (!showToggle) return null;
+                          return (
+                            <button
+                              onClick={(e) => toggleOverride(e, a.id)}
+                              className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                                markedDone
+                                  ? "border-emerald-500 bg-emerald-500"
+                                  : "border-muted-foreground/30 hover:border-muted-foreground/60"
+                              }`}
+                              title={markedDone ? "Undo mark as done" : "Mark as done"}
+                            >
+                              {markedDone && (
+                                <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                </svg>
+                              )}
+                            </button>
+                          );
+                        })()}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className={`font-medium ${isDone(a.id) ? "line-through text-muted-foreground" : color.text}`}>{a.name}</p>
+                              <p className="mt-0.5 text-xs text-muted-foreground">{courseMap[a.course_id] || "Unknown course"}</p>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              {a.due_at && <p className="text-xs font-medium tabular-nums">{formatTime(a.due_at)}</p>}
+                              {a.points_possible != null && (
+                                <p className="text-xs text-muted-foreground">{a.points_possible} pts</p>
+                              )}
+                            </div>
+                          </div>
+                          {status && (
+                            <p className={`mt-1.5 text-xs font-medium ${status.className}`}>{status.label}</p>
                           )}
                         </div>
                       </div>
-                      {status && (
-                        <p className={`mt-1.5 text-xs font-medium ${status.className}`}>{status.label}</p>
-                      )}
                     </div>
                   );
                 })}
@@ -442,7 +487,7 @@ export function WeekCalendar({ assignments, courseMap }: WeekCalendarProps) {
           />
 
           {/* Course color legend */}
-          <div className="rounded-xl border border-border/50 bg-card p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none">
+          <div className="rounded-xl border border-border/50 bg-card p-3 card-lift">
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Courses</p>
             <div className="space-y-1.5">
               {Object.entries(courseColorMap).map(([courseId, color]) => (

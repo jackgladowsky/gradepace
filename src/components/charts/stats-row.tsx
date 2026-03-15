@@ -7,7 +7,7 @@ interface StatCardProps {
 
 function StatCard({ label, value, sub, alert }: StatCardProps) {
   return (
-    <div className="rounded-xl border border-border/50 bg-card px-5 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none">
+    <div className="rounded-xl border border-border/50 bg-card px-5 py-4 card-lift">
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
       <p className={`mt-1 text-2xl font-semibold tabular-nums tracking-tight ${alert ? "text-red-600 dark:text-red-400" : ""}`}>
         {value}

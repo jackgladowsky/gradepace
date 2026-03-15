@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { disconnect } from "@/app/connect/actions";
 
@@ -17,22 +17,23 @@ interface SidebarProps {
   children: React.ReactNode;
 }
 
-const NAV_ITEMS = [
+interface NavItem {
+  label: string;
+  href: string;
+  icon: React.ReactNode;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Nav structure                                                      */
+/* ------------------------------------------------------------------ */
+
+const MAIN_NAV: NavItem[] = [
   {
     label: "Dashboard",
     href: "/",
     icon: (
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955a1.126 1.126 0 0 1 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-      </svg>
-    ),
-  },
-  {
-    label: "Courses",
-    href: "/courses",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a23.54 23.54 0 0 0-2.688 6.413A23.654 23.654 0 0 0 12 23.25a23.654 23.654 0 0 0 8.429-3.69 23.54 23.54 0 0 0-2.688-6.413m-15.482 0A47.71 47.71 0 0 1 12 7.443a47.71 47.71 0 0 1 7.741 2.704M12 2.25c-2.676 0-5.216.584-7.499 1.632m14.998 0A17.919 17.919 0 0 0 12 2.25" />
       </svg>
     ),
   },
@@ -54,21 +55,15 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
+];
+
+const GRADES_NAV: NavItem[] = [
   {
-    label: "Priorities",
-    href: "/priorities",
+    label: "Courses",
+    href: "/courses",
     icon: (
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0-3.75-3.75M17.25 21 21 17.25" />
-      </svg>
-    ),
-  },
-  {
-    label: "Todos",
-    href: "/todos",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a23.54 23.54 0 0 0-2.688 6.413A23.654 23.654 0 0 0 12 23.25a23.654 23.654 0 0 0 8.429-3.69 23.54 23.54 0 0 0-2.688-6.413m-15.482 0A47.71 47.71 0 0 1 12 7.443a47.71 47.71 0 0 1 7.741 2.704M12 2.25c-2.676 0-5.216.584-7.499 1.632m14.998 0A17.919 17.919 0 0 0 12 2.25" />
       </svg>
     ),
   },
@@ -96,6 +91,27 @@ const NAV_ITEMS = [
     icon: (
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V13.5Zm0 2.25h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V18Zm2.498-6.75h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V13.5Zm0 2.25h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V18Zm2.504-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5Zm0 2.25h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V18Zm2.498-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5ZM8.25 6h7.5v2.25h-7.5V6ZM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 0 0 2.25 2.25h10.5a2.25 2.25 0 0 0 2.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0 0 12 2.25Z" />
+      </svg>
+    ),
+  },
+];
+
+const TOOLS_NAV: NavItem[] = [
+  {
+    label: "Priorities",
+    href: "/priorities",
+    icon: (
+      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0-3.75-3.75M17.25 21 21 17.25" />
+      </svg>
+    ),
+  },
+  {
+    label: "Todos",
+    href: "/todos",
+    icon: (
+      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
       </svg>
     ),
   },
@@ -128,64 +144,201 @@ const NAV_ITEMS = [
   },
 ];
 
+/* ------------------------------------------------------------------ */
+/*  Persisted section toggle state                                     */
+/* ------------------------------------------------------------------ */
+
+const STORAGE_KEY = "studyhub_sidebar";
+
+interface SidebarState {
+  grades: boolean;
+  tools: boolean;
+  courses: boolean;
+}
+
+const DEFAULTS: SidebarState = { grades: true, tools: false, courses: true };
+
+function loadSidebarState(): SidebarState {
+  if (typeof window === "undefined") return DEFAULTS;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : DEFAULTS;
+  } catch {
+    return DEFAULTS;
+  }
+}
+
+function saveSidebarState(state: SidebarState) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+/* ------------------------------------------------------------------ */
+/*  Chevron icon                                                       */
+/* ------------------------------------------------------------------ */
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      className={`h-3.5 w-3.5 text-muted-foreground/60 transition-transform duration-200 ${open ? "rotate-90" : ""}`}
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={2}
+      stroke="currentColor"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+    </svg>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Component                                                          */
+/* ------------------------------------------------------------------ */
+
 export function SidebarLayout({ courses, userName, children }: SidebarProps) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [sections, setSections] = useState<SidebarState>(DEFAULTS);
+
+  useEffect(() => {
+    setSections(loadSidebarState());
+  }, []);
+
+  const toggle = useCallback((key: keyof SidebarState) => {
+    setSections((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      saveSidebarState(next);
+      return next;
+    });
+  }, []);
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
   }
 
+  function NavLink({ item }: { item: NavItem }) {
+    const active = isActive(item.href);
+    return (
+      <Link
+        href={item.href}
+        onClick={() => setMobileOpen(false)}
+        className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
+          active
+            ? "bg-accent text-foreground"
+            : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+        }`}
+      >
+        {active && (
+          <span className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
+        )}
+        {item.icon}
+        {item.label}
+      </Link>
+    );
+  }
+
+  // Auto-expand a section if the current page is inside it
+  useEffect(() => {
+    const inGrades = GRADES_NAV.some((item) => isActive(item.href));
+    const inTools = TOOLS_NAV.some((item) => isActive(item.href));
+    const inCourse = pathname.startsWith("/course/");
+    if (inGrades && !sections.grades) toggle("grades");
+    if (inTools && !sections.tools) toggle("tools");
+    if (inCourse && !sections.courses) toggle("courses");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
   const sidebar = (
     <div className="flex h-full flex-col">
       {/* Logo */}
-      <div className="flex h-14 items-center gap-2 border-b border-border/50 px-5">
-        <span className="text-base font-bold tracking-tighter">StudyHub</span>
+      <div className="flex h-14 items-center gap-2.5 border-b border-border/50 px-5">
+        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary">
+          <svg className="h-3.5 w-3.5 text-primary-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a23.54 23.54 0 0 0-2.688 6.413A23.654 23.654 0 0 0 12 23.25a23.654 23.654 0 0 0 8.429-3.69 23.54 23.54 0 0 0-2.688-6.413m-15.482 0A47.71 47.71 0 0 1 12 7.443a47.71 47.71 0 0 1 7.741 2.704M12 2.25c-2.676 0-5.216.584-7.499 1.632m14.998 0A17.919 17.919 0 0 0 12 2.25" />
+          </svg>
+        </div>
+        <span className="text-base font-bold tracking-tight">StudyHub</span>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <div className="space-y-1">
-          {NAV_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                isActive(item.href)
-                  ? "bg-accent text-foreground"
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-              }`}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
+        {/* Main */}
+        <div className="space-y-0.5">
+          {MAIN_NAV.map((item) => (
+            <NavLink key={item.href} item={item} />
           ))}
         </div>
 
-        {/* Courses list */}
-        {courses.length > 0 && (
-          <div className="mt-6">
-            <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Courses
-            </p>
-            <div className="space-y-0.5">
-              {courses.map((course) => (
-                <Link
-                  key={course.id}
-                  href={`/course/${course.id}`}
-                  onClick={() => setOpen(false)}
-                  className={`block truncate rounded-lg px-3 py-1.5 text-[13px] transition-colors ${
-                    pathname === `/course/${course.id}`
-                      ? "bg-accent font-medium text-foreground"
-                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                  }`}
-                >
-                  {course.name}
-                </Link>
+        {/* Grades section */}
+        <div className="mt-5">
+          <button
+            onClick={() => toggle("grades")}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 transition-colors hover:bg-accent/50"
+          >
+            <Chevron open={sections.grades} />
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Grades
+            </span>
+          </button>
+          {sections.grades && (
+            <div className="mt-1 space-y-0.5">
+              {GRADES_NAV.map((item) => (
+                <NavLink key={item.href} item={item} />
               ))}
             </div>
+          )}
+        </div>
+
+        {/* Tools section */}
+        <div className="mt-3">
+          <button
+            onClick={() => toggle("tools")}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 transition-colors hover:bg-accent/50"
+          >
+            <Chevron open={sections.tools} />
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Tools
+            </span>
+          </button>
+          {sections.tools && (
+            <div className="mt-1 space-y-0.5">
+              {TOOLS_NAV.map((item) => (
+                <NavLink key={item.href} item={item} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Course list */}
+        {courses.length > 0 && (
+          <div className="mt-3">
+            <button
+              onClick={() => toggle("courses")}
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 transition-colors hover:bg-accent/50"
+            >
+              <Chevron open={sections.courses} />
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Your Courses
+              </span>
+            </button>
+            {sections.courses && (
+              <div className="mt-1 space-y-0.5">
+                {courses.map((course) => (
+                  <Link
+                    key={course.id}
+                    href={`/course/${course.id}`}
+                    onClick={() => setMobileOpen(false)}
+                    className={`block truncate rounded-lg px-3 py-1.5 text-[13px] transition-colors ${
+                      pathname === `/course/${course.id}`
+                        ? "bg-accent font-medium text-foreground"
+                        : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                    }`}
+                  >
+                    {course.name}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </nav>
@@ -224,20 +377,25 @@ export function SidebarLayout({ courses, userName, children }: SidebarProps) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/50 bg-background/80 px-4 backdrop-blur-md md:hidden">
           <button
-            onClick={() => setOpen(!open)}
+            onClick={() => setMobileOpen(!mobileOpen)}
             className="rounded-md p-1.5 text-muted-foreground hover:bg-accent"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
           </button>
-          <span className="text-sm font-bold tracking-tighter">StudyHub</span>
+          <div className="flex h-5 w-5 items-center justify-center rounded bg-primary">
+            <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a23.54 23.54 0 0 0-2.688 6.413A23.654 23.654 0 0 0 12 23.25a23.654 23.654 0 0 0 8.429-3.69 23.54 23.54 0 0 0-2.688-6.413m-15.482 0A47.71 47.71 0 0 1 12 7.443a47.71 47.71 0 0 1 7.741 2.704M12 2.25c-2.676 0-5.216.584-7.499 1.632m14.998 0A17.919 17.919 0 0 0 12 2.25" />
+            </svg>
+          </div>
+          <span className="text-sm font-bold tracking-tight">StudyHub</span>
         </header>
 
         {/* Mobile drawer */}
-        {open && (
+        {mobileOpen && (
           <>
-            <div className="fixed inset-0 z-40 bg-black/40 md:hidden" onClick={() => setOpen(false)} />
+            <div className="fixed inset-0 z-40 bg-black/40 md:hidden" onClick={() => setMobileOpen(false)} />
             <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-card shadow-xl md:hidden">
               {sidebar}
             </aside>

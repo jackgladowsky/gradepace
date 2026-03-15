@@ -188,7 +188,7 @@ export function GradeGoalCalculator({
       </button>
 
       {expanded && (
-        <div className="rounded-xl border border-border/50 bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none">
+        <div className="rounded-xl border border-border/50 bg-card card-lift">
           {/* Target grade selector */}
           <div className="border-b border-border/50 px-4 py-4">
             <p className="mb-2 text-xs font-medium text-muted-foreground">Target Grade</p>

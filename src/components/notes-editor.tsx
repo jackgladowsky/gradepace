@@ -327,7 +327,7 @@ export function NotesEditor({ courses, filterCourseId }: NotesEditorProps) {
           </button>
         </div>
       ) : (
-        <div className="rounded-xl border border-border/50 bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none">
+        <div className="rounded-xl border border-border/50 bg-card card-lift">
           {displayedNotes.map((note, i) => (
             <button
               key={note.id}

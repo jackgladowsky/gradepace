@@ -107,7 +107,7 @@ export function GpaCalculator({ courses }: GpaCalculatorProps) {
   return (
     <>
       {/* Current GPA card */}
-      <div className="mb-6 rounded-xl border border-border/50 bg-card px-6 py-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none">
+      <div className="mb-6 rounded-xl border border-border/50 bg-card px-6 py-5 card-lift">
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-xs font-medium text-muted-foreground">
@@ -151,7 +151,7 @@ export function GpaCalculator({ courses }: GpaCalculatorProps) {
         <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Courses
         </h2>
-        <div className="rounded-xl border border-border/50 bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none">
+        <div className="rounded-xl border border-border/50 bg-card card-lift">
           {courses.map((course, i) => {
             const effectiveGrade =
               whatIfGrades[course.id] || course.letterGrade;

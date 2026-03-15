@@ -61,7 +61,7 @@ export default async function CalculatorPage() {
           return (
             <div
               key={course.id}
-              className="rounded-xl border border-border/50 bg-card px-5 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none"
+              className="rounded-xl border border-border/50 bg-card px-5 py-4 card-lift"
             >
               <div className="mb-1 flex items-center justify-between gap-4">
                 <p className="truncate text-sm font-medium">{cleanCourseName(course.name)}</p>

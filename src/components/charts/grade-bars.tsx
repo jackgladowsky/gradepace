@@ -22,7 +22,7 @@ export function GradeBars({ data }: { data: CourseGradeData[] }) {
   const chartHeight = Math.max(data.length * 44, 120);
 
   return (
-    <div className="rounded-xl border border-border/50 bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none">
+    <div className="rounded-xl border border-border/50 bg-card p-5 card-lift">
       <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Course Grades</h3>
       <ResponsiveContainer width="100%" height={chartHeight}>
         <BarChart data={data} layout="vertical" margin={{ left: 0, right: 40, top: 0, bottom: 0 }}>

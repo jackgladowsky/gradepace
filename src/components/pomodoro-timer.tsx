@@ -340,7 +340,7 @@ export function PomodoroTimer({ courses }: PomodoroTimerProps) {
       </div>
 
       {/* Today's stats */}
-      <div className="w-full rounded-xl border border-border/50 bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none">
+      <div className="w-full rounded-xl border border-border/50 bg-card p-5 card-lift">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Today
         </h2>

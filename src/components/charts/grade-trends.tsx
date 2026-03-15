@@ -134,7 +134,7 @@ export function GradeTrendOverlay({ courses }: { courses: CourseTrendData[] }) {
   }
 
   return (
-    <div className="rounded-xl border border-border/50 bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none">
+    <div className="rounded-xl border border-border/50 bg-card p-5 card-lift">
       <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Grade Trends Over Time
       </h3>
@@ -241,7 +241,7 @@ export function GradeDistribution({ courses }: { courses: CourseTrendData[] }) {
   if (courses.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-border/50 bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none">
+    <div className="rounded-xl border border-border/50 bg-card p-5 card-lift">
       <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Grade Distribution
       </h3>
@@ -312,7 +312,7 @@ export function TrendStats({ courses }: { courses: CourseTrendData[] }) {
   if (courses.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-border/50 bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none">
+    <div className="rounded-xl border border-border/50 bg-card p-5 card-lift">
       <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Performance Summary
       </h3>
