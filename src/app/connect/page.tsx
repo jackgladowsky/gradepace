@@ -33,16 +33,16 @@ export default function ConnectPage() {
     <div className="flex min-h-screen flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <Link href="/" className="text-lg font-bold tracking-tight">
+          <Link href="/" className="text-sm font-semibold tracking-tight">
             StudyHub
           </Link>
           <p className="mt-2 text-sm text-muted-foreground">
-            Connect your Canvas LMS account
+            Connect your Canvas account
           </p>
         </div>
 
-        <div className="rounded-xl border bg-card p-6 shadow-sm">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <div className="rounded-lg border p-5">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="canvasUrl" className="text-xs font-medium">
                 Canvas URL
@@ -52,7 +52,6 @@ export default function ConnectPage() {
                 name="canvasUrl"
                 type="url"
                 placeholder="https://your-school.instructure.com"
-                className="h-9"
                 required
               />
             </div>
@@ -65,19 +64,16 @@ export default function ConnectPage() {
                 name="canvasToken"
                 type="password"
                 placeholder="Paste your token here"
-                className="h-9"
                 required
               />
-              <p className="text-[11px] leading-relaxed text-muted-foreground">
-                In Canvas, go to Account &rarr; Settings &rarr; New Access Token
+              <p className="text-[11px] text-muted-foreground">
+                Canvas &rarr; Account &rarr; Settings &rarr; New Access Token
               </p>
             </div>
             {error && (
-              <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {error}
-              </div>
+              <p className="text-sm text-destructive">{error}</p>
             )}
-            <Button type="submit" disabled={loading} className="h-9 rounded-lg">
+            <Button type="submit" disabled={loading}>
               {loading ? "Connecting..." : "Connect"}
             </Button>
           </form>
