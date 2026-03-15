@@ -8,10 +8,15 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { connect } from "./actions";
 
+const SCHOOLS = [
+  { name: "Northeastern", url: "https://northeastern.instructure.com" },
+];
+
 export default function ConnectPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [canvasUrl, setCanvasUrl] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -47,11 +52,29 @@ export default function ConnectPage() {
               <Label htmlFor="canvasUrl" className="text-xs font-medium">
                 Canvas URL
               </Label>
+              <div className="flex flex-wrap gap-1.5">
+                {SCHOOLS.map((school) => (
+                  <button
+                    key={school.url}
+                    type="button"
+                    onClick={() => setCanvasUrl(school.url)}
+                    className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                      canvasUrl === school.url
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {school.name}
+                  </button>
+                ))}
+              </div>
               <Input
                 id="canvasUrl"
                 name="canvasUrl"
                 type="url"
                 placeholder="https://your-school.instructure.com"
+                value={canvasUrl}
+                onChange={(e) => setCanvasUrl(e.target.value)}
                 required
               />
             </div>
