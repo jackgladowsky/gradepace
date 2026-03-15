@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCourses, getAssignments, type CanvasAssignment } from "@/lib/canvas";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { GradeGoalCalculator } from "@/components/grade-goal-calculator";
 
 function cleanCourseName(name: string) {
   return name
@@ -131,6 +132,13 @@ export default async function CoursePage({
           {course.term?.name ? ` · ${course.term.name}` : ""}
         </p>
       </div>
+
+      {/* Grade Goal Calculator */}
+      <GradeGoalCalculator
+        assignments={assignments}
+        currentScore={score ?? null}
+        courseName={cleanCourseName(course.name)}
+      />
 
       {/* Upcoming */}
       {upcoming.length > 0 && (
