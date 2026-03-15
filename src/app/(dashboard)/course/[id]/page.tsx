@@ -3,18 +3,21 @@ import { redirect } from "next/navigation";
 import { getCourses, getAssignments, type CanvasAssignment } from "@/lib/canvas";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { RefreshButton } from "@/components/refresh-button";
-import { ThemeToggle } from "@/components/theme-toggle";
+
+function cleanCourseName(name: string) {
+  return name
+    .replace(/\s*\[.*?\]\s*/g, "")
+    .replace(/\s*SEC\s+\S+/gi, "")
+    .replace(/\s+(Spring|Fall|Summer|Winter)\s+\d{4}/gi, "")
+    .replace(/\s+\d{5}\s+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 function formatDueDate(dueAt: string | null) {
   if (!dueAt) return "No due date";
   const date = new Date(dueAt);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
 function getSubmissionStatus(assignment: CanvasAssignment) {
@@ -111,67 +114,53 @@ export default async function CoursePage({
   }
 
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-3xl items-center gap-3 px-6 py-3">
-          <Link href="/" className="text-muted-foreground transition-colors hover:text-foreground">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-            </svg>
-          </Link>
-          <span className="flex-1 text-sm font-semibold truncate">{course.name}</span>
-          <RefreshButton />
-          <ThemeToggle />
+    <div className="mx-auto max-w-2xl px-6 py-10">
+      {/* Course header */}
+      <div className="mb-10">
+        <h1 className="text-xl font-semibold tracking-tight">{cleanCourseName(course.name)}</h1>
+        <div className="mt-2 flex items-baseline gap-3">
+          <span className={`text-3xl font-semibold tabular-nums ${getGradeColor(score)}`}>
+            {score != null ? `${score}%` : "--"}
+          </span>
+          {grade && score != null && (
+            <span className="text-sm text-muted-foreground">{grade}</span>
+          )}
         </div>
-      </header>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {course.course_code}
+          {course.term?.name ? ` · ${course.term.name}` : ""}
+        </p>
+      </div>
 
-      <main className="mx-auto max-w-3xl px-6 py-10">
-        {/* Grade */}
-        <div className="mb-10">
-          <div className="flex items-baseline gap-3">
-            <span className={`text-3xl font-semibold tabular-nums ${getGradeColor(score)}`}>
-              {score != null ? `${score}%` : "—"}
-            </span>
-            {grade && score != null && (
-              <span className="text-sm text-muted-foreground">{grade}</span>
-            )}
+      {/* Upcoming */}
+      {upcoming.length > 0 && (
+        <section className="mb-10">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold">Upcoming</h2>
+            <span className="text-xs text-muted-foreground">{upcoming.length}</span>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {course.course_code}
-            {course.term?.name ? ` · ${course.term.name}` : ""}
-          </p>
-        </div>
+          <div className="rounded-xl border border-border/50 bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none">
+            {upcoming.map((assignment, i) => (
+              <AssignmentRow key={assignment.id} assignment={assignment} index={i} />
+            ))}
+          </div>
+        </section>
+      )}
 
-        {/* Upcoming */}
-        {upcoming.length > 0 && (
-          <section className="mb-10">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-semibold">Upcoming</h2>
-              <span className="text-xs text-muted-foreground">{upcoming.length}</span>
-            </div>
-            <div className="rounded-lg border">
-              {upcoming.map((assignment, i) => (
-                <AssignmentRow key={assignment.id} assignment={assignment} index={i} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Past */}
-        {past.length > 0 && (
-          <section>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-semibold">Past</h2>
-              <span className="text-xs text-muted-foreground">{past.length}</span>
-            </div>
-            <div className="rounded-lg border">
-              {past.map((assignment, i) => (
-                <AssignmentRow key={assignment.id} assignment={assignment} index={i} />
-              ))}
-            </div>
-          </section>
-        )}
-      </main>
+      {/* Past */}
+      {past.length > 0 && (
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold">Past</h2>
+            <span className="text-xs text-muted-foreground">{past.length}</span>
+          </div>
+          <div className="rounded-xl border border-border/50 bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none">
+            {past.map((assignment, i) => (
+              <AssignmentRow key={assignment.id} assignment={assignment} index={i} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
