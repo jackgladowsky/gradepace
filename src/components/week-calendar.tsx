@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { getOverrides, setOverride as setOverrideStorage } from "@/lib/assignment-overrides";
 
 /* ------------------------------------------------------------------ */
@@ -25,32 +24,34 @@ export interface CalendarAssignment {
 
 interface WeekCalendarProps {
   assignments: CalendarAssignment[];
-  courseMap: Record<number, string>; // courseId -> cleaned name
+  courseMap: Record<number, string>;
 }
 
 /* ------------------------------------------------------------------ */
-/*  Color palette (works in light & dark)                              */
+/*  Color palette                                                      */
 /* ------------------------------------------------------------------ */
 
 const COURSE_COLORS = [
-  { bg: "bg-blue-100 dark:bg-blue-900/40", text: "text-blue-700 dark:text-blue-300", dot: "bg-blue-500", border: "border-blue-200 dark:border-blue-800" },
-  { bg: "bg-emerald-100 dark:bg-emerald-900/40", text: "text-emerald-700 dark:text-emerald-300", dot: "bg-emerald-500", border: "border-emerald-200 dark:border-emerald-800" },
-  { bg: "bg-violet-100 dark:bg-violet-900/40", text: "text-violet-700 dark:text-violet-300", dot: "bg-violet-500", border: "border-violet-200 dark:border-violet-800" },
-  { bg: "bg-amber-100 dark:bg-amber-900/40", text: "text-amber-700 dark:text-amber-300", dot: "bg-amber-500", border: "border-amber-200 dark:border-amber-800" },
-  { bg: "bg-rose-100 dark:bg-rose-900/40", text: "text-rose-700 dark:text-rose-300", dot: "bg-rose-500", border: "border-rose-200 dark:border-rose-800" },
-  { bg: "bg-cyan-100 dark:bg-cyan-900/40", text: "text-cyan-700 dark:text-cyan-300", dot: "bg-cyan-500", border: "border-cyan-200 dark:border-cyan-800" },
-  { bg: "bg-orange-100 dark:bg-orange-900/40", text: "text-orange-700 dark:text-orange-300", dot: "bg-orange-500", border: "border-orange-200 dark:border-orange-800" },
-  { bg: "bg-pink-100 dark:bg-pink-900/40", text: "text-pink-700 dark:text-pink-300", dot: "bg-pink-500", border: "border-pink-200 dark:border-pink-800" },
-  { bg: "bg-teal-100 dark:bg-teal-900/40", text: "text-teal-700 dark:text-teal-300", dot: "bg-teal-500", border: "border-teal-200 dark:border-teal-800" },
-  { bg: "bg-indigo-100 dark:bg-indigo-900/40", text: "text-indigo-700 dark:text-indigo-300", dot: "bg-indigo-500", border: "border-indigo-200 dark:border-indigo-800" },
+  { dot: "bg-blue-500", text: "text-blue-600 dark:text-blue-400" },
+  { dot: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" },
+  { dot: "bg-violet-500", text: "text-violet-600 dark:text-violet-400" },
+  { dot: "bg-amber-500", text: "text-amber-600 dark:text-amber-400" },
+  { dot: "bg-rose-500", text: "text-rose-600 dark:text-rose-400" },
+  { dot: "bg-cyan-500", text: "text-cyan-600 dark:text-cyan-400" },
+  { dot: "bg-orange-500", text: "text-orange-600 dark:text-orange-400" },
+  { dot: "bg-pink-500", text: "text-pink-600 dark:text-pink-400" },
+  { dot: "bg-teal-500", text: "text-teal-600 dark:text-teal-400" },
+  { dot: "bg-indigo-500", text: "text-indigo-600 dark:text-indigo-400" },
 ];
 
 /* ------------------------------------------------------------------ */
 /*  Date helpers                                                       */
 /* ------------------------------------------------------------------ */
 
-const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAY_NAMES_FULL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAY_NAMES_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTH_NAMES_FULL = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 function getMonday(date: Date): Date {
   const d = new Date(date);
@@ -76,9 +77,9 @@ function formatDateRange(monday: Date): string {
   const startMonth = MONTH_NAMES[monday.getMonth()];
   const endMonth = MONTH_NAMES[sunday.getMonth()];
   if (startMonth === endMonth) {
-    return `${startMonth} ${monday.getDate()} - ${sunday.getDate()}, ${monday.getFullYear()}`;
+    return `${startMonth} ${monday.getDate()} – ${sunday.getDate()}, ${monday.getFullYear()}`;
   }
-  return `${startMonth} ${monday.getDate()} - ${endMonth} ${sunday.getDate()}, ${sunday.getFullYear()}`;
+  return `${startMonth} ${monday.getDate()} – ${endMonth} ${sunday.getDate()}, ${sunday.getFullYear()}`;
 }
 
 function formatTime(dateStr: string): string {
@@ -86,83 +87,87 @@ function formatTime(dateStr: string): string {
   return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
+function dateKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 /* ------------------------------------------------------------------ */
-/*  Submission status badge                                            */
+/*  Submission status                                                  */
 /* ------------------------------------------------------------------ */
 
-function submissionLabel(a: CalendarAssignment, markedDone: boolean): { label: string; className: string } | null {
-  if (markedDone) return { label: "Done", className: "text-emerald-600 dark:text-emerald-400" };
+function submissionStatus(a: CalendarAssignment, markedDone: boolean): { label: string; className: string } | null {
+  if (markedDone) return { label: "Done", className: "text-emerald-500" };
   const sub = a.submission;
   if (!sub) return null;
-  if (sub.missing) return { label: "Missing", className: "text-red-600 dark:text-red-400" };
-  if (sub.late) return { label: "Late", className: "text-amber-600 dark:text-amber-400" };
-  if (sub.workflow_state === "graded") return { label: "Graded", className: "text-emerald-600 dark:text-emerald-400" };
-  if (sub.submitted_at) return { label: "Done", className: "text-muted-foreground" };
+  if (sub.missing) return { label: "Missing", className: "text-red-500" };
+  if (sub.late) return { label: "Late", className: "text-amber-500" };
+  if (sub.workflow_state === "graded") return { label: "Graded", className: "text-emerald-500" };
+  if (sub.submitted_at) return { label: "Submitted", className: "text-muted-foreground" };
   return null;
 }
 
 /* ------------------------------------------------------------------ */
-/*  Mini month calendar                                                */
+/*  Mini month (compact, inline)                                       */
 /* ------------------------------------------------------------------ */
 
 function MiniMonth({
   monday,
   assignmentDates,
   onDayClick,
-  selectedDay,
+  today,
 }: {
   monday: Date;
   assignmentDates: Set<string>;
   onDayClick: (date: Date) => void;
-  selectedDay: Date | null;
+  today: Date;
 }) {
-  // Show the month that contains the majority of the week
   const midWeek = addDays(monday, 3);
   const year = midWeek.getFullYear();
   const month = midWeek.getMonth();
 
   const firstOfMonth = new Date(year, month, 1);
-  const startDow = (firstOfMonth.getDay() + 6) % 7; // 0=Mon
+  const startDow = (firstOfMonth.getDay() + 6) % 7;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
 
   const cells: (number | null)[] = [];
   for (let i = 0; i < startDow; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
+  // Which days are in the current week?
+  const weekDayKeys = new Set<string>();
+  for (let i = 0; i < 7; i++) weekDayKeys.add(dateKey(addDays(monday, i)));
+
   return (
-    <div className="rounded-xl border border-border/50 bg-card p-3 card-lift">
-      <p className="mb-2 text-center text-xs font-semibold text-muted-foreground">
-        {MONTH_NAMES[month]} {year}
+    <div>
+      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {MONTH_NAMES_FULL[month]} {year}
       </p>
       <div className="grid grid-cols-7 gap-0.5 text-center">
         {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
-          <span key={i} className="text-[10px] font-medium text-muted-foreground/60">{d}</span>
+          <span key={i} className="text-[9px] font-medium text-muted-foreground/50 pb-0.5">{d}</span>
         ))}
         {cells.map((day, i) => {
           if (day === null) return <span key={`e${i}`} />;
           const date = new Date(year, month, day);
-          const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+          const key = dateKey(date);
           const hasAssignment = assignmentDates.has(key);
           const isToday = isSameDay(date, today);
-          const isSelected = selectedDay && isSameDay(date, selectedDay);
+          const inWeek = weekDayKeys.has(key);
           return (
             <button
               key={key}
               onClick={() => onDayClick(date)}
-              className={`relative flex h-6 w-6 items-center justify-center rounded-full text-[11px] transition-colors ${
-                isSelected
-                  ? "bg-foreground text-background font-semibold"
-                  : isToday
-                    ? "bg-accent font-semibold text-foreground"
-                    : "text-muted-foreground hover:bg-accent/50"
+              className={`relative flex h-5 w-5 items-center justify-center rounded text-[10px] transition-colors mx-auto ${
+                isToday
+                  ? "bg-primary text-primary-foreground font-bold"
+                  : inWeek
+                    ? "bg-accent/60 text-foreground font-medium"
+                    : "text-muted-foreground hover:bg-accent/40"
               }`}
             >
               {day}
-              {hasAssignment && (
-                <span className={`absolute bottom-0.5 h-1 w-1 rounded-full ${isSelected ? "bg-background" : "bg-foreground/40"}`} />
+              {hasAssignment && !isToday && (
+                <span className="absolute -bottom-0.5 h-0.5 w-2 rounded-full bg-primary/60" />
               )}
             </button>
           );
@@ -184,7 +189,6 @@ export function WeekCalendar({ assignments, courseMap }: WeekCalendarProps) {
   }, []);
 
   const [weekOffset, setWeekOffset] = useState(0);
-  const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [overrides, setOverrides] = useState<Record<string, { markedDone: boolean }>>({});
 
   useEffect(() => {
@@ -219,261 +223,196 @@ export function WeekCalendar({ assignments, courseMap }: WeekCalendarProps) {
     for (const a of assignments) {
       if (!a.due_at) continue;
       const d = new Date(a.due_at);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const key = dateKey(d);
       if (!map[key]) map[key] = [];
       map[key].push(a);
     }
-    // Sort each day's assignments by time
     for (const key of Object.keys(map)) {
       map[key].sort((a, b) => new Date(a.due_at!).getTime() - new Date(b.due_at!).getTime());
     }
     return map;
   }, [assignments]);
 
-  // All dates that have assignments (for mini calendar dots)
   const assignmentDates = useMemo(() => new Set(Object.keys(assignmentsByDate)), [assignmentsByDate]);
 
   // Build week days
   const weekDays = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => {
       const date = addDays(monday, i);
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-      return { date, key, dayName: DAY_NAMES[i], dayNum: date.getDate(), isToday: isSameDay(date, today) };
+      const key = dateKey(date);
+      return {
+        date,
+        key,
+        dayNameFull: DAY_NAMES_FULL[i],
+        dayNameShort: DAY_NAMES_SHORT[i],
+        dayNum: date.getDate(),
+        month: MONTH_NAMES[date.getMonth()],
+        isToday: isSameDay(date, today),
+        isPast: date < today,
+      };
     });
   }, [monday, today]);
 
-  const selectedDay = expandedDay ? (() => {
-    const parts = expandedDay.split("-");
-    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-  })() : null;
+  // Total assignments this week
+  const weekTotal = weekDays.reduce((sum, day) => sum + (assignmentsByDate[day.key]?.length || 0), 0);
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
+    <div className="mx-auto max-w-3xl px-6 py-8">
       {/* Header */}
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Calendar</h1>
-          <p className="mt-1 text-xs text-muted-foreground">{formatDateRange(monday)}</p>
+          <h1 className="text-lg font-semibold tracking-tight">Calendar</h1>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {formatDateRange(monday)}
+            {weekTotal > 0 && (
+              <span className="ml-2 text-foreground/60">· {weekTotal} assignment{weekTotal !== 1 ? "s" : ""}</span>
+            )}
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setWeekOffset((w) => w - 1)}>
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-            </svg>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setWeekOffset((w) => w - 1)}
+            className="rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
             Prev
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setWeekOffset(0)}>
+          </button>
+          <button
+            onClick={() => setWeekOffset(0)}
+            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+              weekOffset === 0
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+            }`}
+          >
             Today
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setWeekOffset((w) => w + 1)}>
+          </button>
+          <button
+            onClick={() => setWeekOffset((w) => w + 1)}
+            className="rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
             Next
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-            </svg>
-          </Button>
+          </button>
         </div>
       </div>
 
-      <div className="flex flex-col gap-6 lg:flex-row">
-        {/* Week grid */}
+      <div className="flex gap-8">
+        {/* Main agenda */}
         <div className="min-w-0 flex-1">
-          {/* Desktop: 7-column grid */}
-          <div className="hidden md:grid md:grid-cols-7 md:gap-px md:overflow-hidden md:rounded-xl md:border md:border-border/50 md:bg-border/50">
-            {weekDays.map((day) => {
+          <div className="overflow-hidden rounded-lg border border-border/60 bg-card">
+            {weekDays.map((day, dayIdx) => {
               const dayAssignments = assignmentsByDate[day.key] || [];
-              const isExpanded = expandedDay === day.key;
+              const isEmpty = dayAssignments.length === 0;
+
               return (
-                <button
-                  key={day.key}
-                  onClick={() => setExpandedDay(isExpanded ? null : day.key)}
-                  className={`flex min-h-[140px] flex-col bg-card p-2 text-left transition-colors hover:bg-accent/20 ${
-                    isExpanded ? "ring-2 ring-inset ring-foreground/20" : ""
-                  }`}
-                >
-                  {/* Day header */}
-                  <div className="mb-1.5 flex items-center gap-1.5">
-                    <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
-                      day.isToday ? "bg-foreground text-background" : "text-muted-foreground"
+                <div key={day.key} className={dayIdx > 0 ? "border-t border-border/40" : ""}>
+                  {/* Day header row */}
+                  <div className={`flex items-center gap-3 px-4 py-2.5 ${
+                    day.isToday ? "bg-primary/8" : day.isPast ? "opacity-40" : ""
+                  }`}>
+                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold tabular-nums ${
+                      day.isToday
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted/50 text-muted-foreground"
                     }`}>
                       {day.dayNum}
-                    </span>
-                    <span className="text-[11px] font-medium text-muted-foreground">{day.dayName}</span>
-                  </div>
-                  {/* Assignment pills */}
-                  <div className="flex flex-1 flex-col gap-1">
-                    {dayAssignments.slice(0, 4).map((a) => {
-                      const color = courseColorMap[a.course_id] || COURSE_COLORS[0];
-                      const status = submissionLabel(a, isDone(a.id));
-                      return (
-                        <div
-                          key={a.id}
-                          className={`rounded-md border px-1.5 py-1 ${color.bg} ${color.border}`}
-                        >
-                          <p className={`truncate text-[11px] font-medium ${color.text}`}>{a.name}</p>
-                          <p className="text-[10px] text-muted-foreground">
-                            {a.due_at && formatTime(a.due_at)}
-                            {a.points_possible != null && ` \u00b7 ${a.points_possible}pts`}
-                            {status && (
-                              <span className={`ml-1 ${status.className}`}>{status.label}</span>
-                            )}
-                          </p>
-                        </div>
-                      );
-                    })}
-                    {dayAssignments.length > 4 && (
-                      <span className="text-[10px] font-medium text-muted-foreground">
-                        +{dayAssignments.length - 4} more
+                    </div>
+                    <div className="flex-1">
+                      <span className={`text-sm font-semibold ${day.isToday ? "text-foreground" : "text-muted-foreground"}`}>
+                        {day.dayNameFull}
+                      </span>
+                      {day.isToday && (
+                        <span className="ml-2 text-[11px] font-bold uppercase tracking-wider text-primary">Today</span>
+                      )}
+                    </div>
+                    {!isEmpty && (
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {dayAssignments.length}
                       </span>
                     )}
                   </div>
-                </button>
-              );
-            })}
-          </div>
 
-          {/* Mobile: stacked days */}
-          <div className="flex flex-col gap-2 md:hidden">
-            {weekDays.map((day) => {
-              const dayAssignments = assignmentsByDate[day.key] || [];
-              const isExpanded = expandedDay === day.key;
-              return (
-                <div key={day.key}>
-                  <button
-                    onClick={() => setExpandedDay(isExpanded ? null : day.key)}
-                    className={`flex w-full items-center gap-3 rounded-lg border border-border/50 px-4 py-3 text-left transition-colors hover:bg-accent/20 ${
-                      day.isToday ? "border-foreground/20 bg-accent/30" : "bg-card"
-                    } ${isExpanded ? "ring-2 ring-foreground/20" : ""}`}
-                  >
-                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
-                      day.isToday ? "bg-foreground text-background" : "bg-muted text-muted-foreground"
-                    }`}>
-                      {day.dayNum}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <span className="text-sm font-medium">{day.dayName}</span>
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        {dayAssignments.length > 0
-                          ? `${dayAssignments.length} assignment${dayAssignments.length > 1 ? "s" : ""}`
-                          : "No assignments"}
-                      </span>
-                    </div>
-                    <svg
-                      className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                    </svg>
-                  </button>
-                  {isExpanded && dayAssignments.length > 0 && (
-                    <div className="mt-1 space-y-1 pl-4">
-                      {dayAssignments.map((a) => {
-                        const color = courseColorMap[a.course_id] || COURSE_COLORS[0];
-                        const status = submissionLabel(a, isDone(a.id));
-                        return (
-                          <div key={a.id} className={`rounded-lg border px-3 py-2 ${color.bg} ${color.border}`}>
-                            <Link href={`/assignment/${a.id}?courseId=${a.course_id}`} className={`text-sm font-medium hover:underline ${color.text}`}>{a.name}</Link>
-                            <Link href={`/course/${a.course_id}`} className="mt-0.5 block text-xs text-muted-foreground hover:text-foreground transition-colors">
-                              {courseMap[a.course_id] || "Unknown course"}
-                            </Link>
+                  {/* Assignments for this day */}
+                  {dayAssignments.map((a) => {
+                    const color = courseColorMap[a.course_id] || COURSE_COLORS[0];
+                    const status = submissionStatus(a, isDone(a.id));
+                    const done = isDone(a.id);
+
+                    return (
+                      <div
+                        key={a.id}
+                        className={`flex items-center gap-3 border-t border-border/20 px-4 py-3 transition-colors hover:bg-accent/20 ${
+                          day.isPast && !day.isToday ? "opacity-40" : ""
+                        }`}
+                      >
+                        {/* Mark done button */}
+                        <button
+                          onClick={(e) => toggleOverride(e, a.id)}
+                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ml-9 ${
+                            done
+                              ? "border-emerald-500 bg-emerald-500"
+                              : "border-muted-foreground/30 hover:border-emerald-500 hover:bg-emerald-500/10"
+                          }`}
+                          title={done ? "Undo" : "Mark as done"}
+                        >
+                          {done && (
+                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                            </svg>
+                          )}
+                        </button>
+
+                        {/* Color dot */}
+                        <span className={`h-2 w-2 shrink-0 rounded-full ${color.dot}`} />
+
+                        {/* Assignment info */}
+                        <Link
+                          href={`/assignment/${a.id}?courseId=${a.course_id}`}
+                          className="flex min-w-0 flex-1 items-center gap-4"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className={`truncate text-sm font-medium ${done ? "line-through text-muted-foreground" : ""}`}>
+                              {a.name}
+                            </p>
                             <p className="text-xs text-muted-foreground">
-                              {a.due_at && formatTime(a.due_at)}
-                              {a.points_possible != null && ` \u00b7 ${a.points_possible} pts`}
-                              {status && (
-                                <span className={`ml-1 font-medium ${status.className}`}>{status.label}</span>
-                              )}
+                              {courseMap[a.course_id]}
                             </p>
                           </div>
-                        );
-                      })}
+                          <div className="flex shrink-0 items-center gap-4 text-right">
+                            {status && (
+                              <span className={`text-[11px] font-bold uppercase tracking-wider ${status.className}`}>
+                                {status.label}
+                              </span>
+                            )}
+                            {a.points_possible != null && (
+                              <span className="hidden text-xs text-muted-foreground sm:inline tabular-nums">
+                                {a.points_possible} pts
+                              </span>
+                            )}
+                            {a.due_at && (
+                              <span className="w-20 text-right text-xs font-medium tabular-nums text-muted-foreground">
+                                {formatTime(a.due_at)}
+                              </span>
+                            )}
+                          </div>
+                        </Link>
+                      </div>
+                    );
+                  })}
+
+                  {/* Empty day indicator */}
+                  {isEmpty && !day.isPast && (
+                    <div className="border-t border-border/20 px-4 py-2 pl-16">
+                      <span className="text-xs text-muted-foreground/40">Nothing due</span>
                     </div>
                   )}
                 </div>
               );
             })}
           </div>
-
-          {/* Day detail panel (desktop) */}
-          {expandedDay && (assignmentsByDate[expandedDay] || []).length > 0 && (
-            <div className="mt-4 hidden rounded-xl border border-border/50 bg-card p-4 card-lift md:block">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-semibold">
-                  {(() => {
-                    const parts = expandedDay.split("-");
-                    const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-                    return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-                  })()}
-                </h3>
-                <button
-                  onClick={() => setExpandedDay(null)}
-                  className="rounded-md p-1 text-muted-foreground hover:bg-accent"
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <div className="space-y-2">
-                {(assignmentsByDate[expandedDay] || []).map((a) => {
-                  const color = courseColorMap[a.course_id] || COURSE_COLORS[0];
-                  const status = submissionLabel(a, isDone(a.id));
-                  return (
-                    <div key={a.id} className={`rounded-lg border px-4 py-3 ${color.bg} ${color.border}`}>
-                      <div className="flex items-start gap-3">
-                        {(() => {
-                          const markedDone = isDone(a.id);
-                          const sub = a.submission;
-                          const canOverride = !!(sub?.missing || sub?.late || (!sub?.submitted_at && sub?.workflow_state !== "graded"));
-                          const showToggle = canOverride || markedDone;
-                          if (!showToggle) return null;
-                          return (
-                            <button
-                              onClick={(e) => toggleOverride(e, a.id)}
-                              className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                                markedDone
-                                  ? "border-emerald-500 bg-emerald-500"
-                                  : "border-muted-foreground/30 hover:border-muted-foreground/60"
-                              }`}
-                              title={markedDone ? "Undo mark as done" : "Mark as done"}
-                            >
-                              {markedDone && (
-                                <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                                </svg>
-                              )}
-                            </button>
-                          );
-                        })()}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <Link href={`/assignment/${a.id}?courseId=${a.course_id}`} className={`font-medium hover:underline ${isDone(a.id) ? "line-through text-muted-foreground" : color.text}`}>{a.name}</Link>
-                              <Link href={`/course/${a.course_id}`} className="mt-0.5 block text-xs text-muted-foreground hover:text-foreground transition-colors">{courseMap[a.course_id] || "Unknown course"}</Link>
-                            </div>
-                            <div className="shrink-0 text-right">
-                              {a.due_at && <p className="text-xs font-medium tabular-nums">{formatTime(a.due_at)}</p>}
-                              {a.points_possible != null && (
-                                <p className="text-xs text-muted-foreground">{a.points_possible} pts</p>
-                              )}
-                            </div>
-                          </div>
-                          {status && (
-                            <p className={`mt-1.5 text-xs font-medium ${status.className}`}>{status.label}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Right sidebar: mini month + legend */}
-        <div className="flex flex-col gap-4 lg:w-52">
+        {/* Mini month sidebar */}
+        <div className="hidden w-36 shrink-0 lg:block">
           <MiniMonth
             monday={monday}
             assignmentDates={assignmentDates}
@@ -481,22 +420,22 @@ export function WeekCalendar({ assignments, courseMap }: WeekCalendarProps) {
               const targetMonday = getMonday(date);
               const diff = Math.round((targetMonday.getTime() - getMonday(today).getTime()) / (7 * 24 * 60 * 60 * 1000));
               setWeekOffset(diff);
-              const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-              setExpandedDay(key);
             }}
-            selectedDay={selectedDay}
+            today={today}
           />
 
-          {/* Course color legend */}
-          <div className="rounded-xl border border-border/50 bg-card p-3 card-lift">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Courses</p>
-            <div className="space-y-1.5">
+          {/* Course legend */}
+          <div className="mt-4">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Courses</p>
+            <div className="space-y-1">
               {Object.entries(courseColorMap).map(([courseId, color]) => (
-                <Link key={courseId} href={`/course/${courseId}`} className="flex items-center gap-2 transition-colors hover:bg-accent/50 rounded-md -mx-1 px-1 py-0.5">
-                  <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${color.dot}`} />
-                  <span className="truncate text-xs text-muted-foreground">
-                    {courseMap[Number(courseId)] || `Course ${courseId}`}
-                  </span>
+                <Link
+                  key={courseId}
+                  href={`/course/${courseId}`}
+                  className="flex items-center gap-1.5 rounded py-0.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${color.dot}`} />
+                  <span className="truncate">{courseMap[Number(courseId)]}</span>
                 </Link>
               ))}
             </div>

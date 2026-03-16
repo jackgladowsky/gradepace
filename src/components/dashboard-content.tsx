@@ -74,12 +74,12 @@ function gradeColor(score: number) {
   return { text: "text-red-600 dark:text-red-400", bar: "bg-red-500" };
 }
 
-function urgencyStyle(hoursUntil: number) {
-  if (hoursUntil <= 0) return { border: "border-l-red-500", text: "text-red-600 dark:text-red-400", label: "OVERDUE" };
-  if (hoursUntil <= 24) return { border: "border-l-red-500", text: "text-red-600 dark:text-red-400", label: "DUE TODAY" };
-  if (hoursUntil <= 48) return { border: "border-l-orange-500", text: "text-orange-600 dark:text-orange-400", label: "DUE TOMORROW" };
-  if (hoursUntil <= 168) return { border: "border-l-amber-500", text: "text-amber-600 dark:text-amber-400", label: "DUE SOON" };
-  return { border: "border-l-blue-500", text: "text-blue-600 dark:text-blue-400", label: "UP NEXT" };
+function urgencyLabel(hoursUntil: number) {
+  if (hoursUntil <= 0) return { text: "text-red-500", bg: "bg-red-500/10", label: "OVERDUE" };
+  if (hoursUntil <= 24) return { text: "text-red-500", bg: "bg-red-500/10", label: "TODAY" };
+  if (hoursUntil <= 48) return { text: "text-orange-500", bg: "bg-orange-500/10", label: "TOMORROW" };
+  if (hoursUntil <= 168) return { text: "text-amber-500", bg: "bg-amber-500/10", label: "THIS WEEK" };
+  return { text: "text-blue-500", bg: "bg-blue-500/10", label: "UPCOMING" };
 }
 
 function formatRelativeTime(dueAt: string, now: number): string {
@@ -91,14 +91,14 @@ function formatRelativeTime(dueAt: string, now: number): string {
   const days = Math.floor(absDiff / 86400000);
 
   if (diff < 0) {
-    if (hours < 1) return `${mins}m overdue`;
-    if (days === 0) return `${hours}h overdue`;
-    return `${days}d overdue`;
+    if (hours < 1) return `${mins}m ago`;
+    if (days === 0) return `${hours}h ago`;
+    return `${days}d ago`;
   }
-  if (mins < 60) return `in ${mins}m`;
-  if (hours < 24) return `in ${hours}h`;
-  if (days === 1) return "tomorrow";
-  return `in ${days} days`;
+  if (mins < 60) return `${mins}m`;
+  if (hours < 24) return `${hours}h`;
+  if (days === 1) return "1d";
+  return `${days}d`;
 }
 
 function formatDueTime(dueAt: string): string {
@@ -107,7 +107,7 @@ function formatDueTime(dueAt: string): string {
 
 function formatDueShort(dueAt: string): string {
   const d = new Date(dueAt);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) + ", " + formatDueTime(dueAt);
+  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 }
 
 function isUnsubmitted(a: Assignment, done: boolean): boolean {
@@ -180,45 +180,22 @@ export function DashboardContent({
     return { submitted, graded, missing, late, notYetDue, completedCount, totalCount, completionPct, dueThisWeek };
   }, [allAssignments, overrides, now]);
 
-  /* --- Next up: first future unsubmitted assignment ----------------- */
-  const nextUp = useMemo(() => {
+  /* --- All upcoming unsubmitted, sorted by due date ------------------ */
+  const upcoming = useMemo(() => {
     return allAssignments
-      .filter((a) => a.due_at && new Date(a.due_at).getTime() > now - 86400000 && isUnsubmitted(a, isDone(a.id)))
-      .sort((a, b) => new Date(a.due_at!).getTime() - new Date(b.due_at!).getTime())[0] ?? null;
-  }, [allAssignments, overrides, now]);
-
-  /* --- Grouped upcoming --------------------------------------------- */
-  const groups = useMemo(() => {
-    const todayEnd = new Date(now);
-    todayEnd.setHours(23, 59, 59, 999);
-    const tomorrowEnd = new Date(todayEnd);
-    tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
-    const weekEnd = new Date(now);
-    weekEnd.setDate(weekEnd.getDate() + 7);
-    weekEnd.setHours(23, 59, 59, 999);
-
-    const today: Assignment[] = [];
-    const tomorrow: Assignment[] = [];
-    const thisWeek: Assignment[] = [];
-    const later: Assignment[] = [];
-
-    const future = allAssignments
-      .filter((a) => a.due_at && new Date(a.due_at).getTime() > now)
+      .filter((a) => a.due_at && isUnsubmitted(a, isDone(a.id)))
       .sort((a, b) => new Date(a.due_at!).getTime() - new Date(b.due_at!).getTime());
-
-    for (const a of future) {
-      if (isDone(a.id)) continue;
-      const sub = a.submission;
-      if (sub?.submitted_at || sub?.workflow_state === "graded") continue;
-
-      const d = new Date(a.due_at!);
-      if (d <= todayEnd) today.push(a);
-      else if (d <= tomorrowEnd) tomorrow.push(a);
-      else if (d <= weekEnd) thisWeek.push(a);
-      else later.push(a);
-    }
-    return { today, tomorrow, thisWeek, later };
   }, [allAssignments, overrides, now]);
+
+  /* --- Overdue items ------------------------------------------------- */
+  const overdue = useMemo(() => {
+    return upcoming.filter((a) => new Date(a.due_at!).getTime() <= now);
+  }, [upcoming, now]);
+
+  /* --- Future items -------------------------------------------------- */
+  const future = useMemo(() => {
+    return upcoming.filter((a) => new Date(a.due_at!).getTime() > now);
+  }, [upcoming, now]);
 
   /* --- Pending per course ------------------------------------------- */
   const pendingByCourse = useMemo(() => {
@@ -230,20 +207,11 @@ export function DashboardContent({
     return map;
   }, [allAssignments, overrides]);
 
-  /* --- Greeting & briefing ------------------------------------------ */
+  /* --- Greeting ------------------------------------------------------ */
   const firstName = userName?.split(" ")[0] ?? "";
   const greeting = getGreeting();
 
-  const briefing = useMemo(() => {
-    const parts: string[] = [];
-    if (groups.today.length > 0) parts.push(`${groups.today.length} due today`);
-    if (stats.dueThisWeek > 0) parts.push(`${stats.dueThisWeek} this week`);
-    if (averageGrade != null) parts.push(`${averageGrade}% average`);
-    if (parts.length === 0) return "You're all caught up";
-    return parts.join(" \u00b7 ");
-  }, [groups, stats, averageGrade]);
-
-  /* --- Completion data for ring ------------------------------------- */
+  /* --- Completion data for ring -------------------------------------- */
   const completionData: CompletionData = {
     submitted: stats.submitted,
     graded: stats.graded,
@@ -252,81 +220,35 @@ export function DashboardContent({
     notYetDue: stats.notYetDue,
   };
 
-  /* --- Up Next urgency ---------------------------------------------- */
-  const nextUpMeta = useMemo(() => {
-    if (!nextUp?.due_at) return null;
-    const hoursUntil = (new Date(nextUp.due_at).getTime() - now) / 3600000;
-    return {
-      ...urgencyStyle(hoursUntil),
-      relTime: formatRelativeTime(nextUp.due_at, now),
-    };
-  }, [nextUp, now]);
-
-  const hasUpcoming = groups.today.length + groups.tomorrow.length + groups.thisWeek.length + groups.later.length > 0;
-
   /* ------------------------------------------------------------------ */
   /*  Render                                                             */
   /* ------------------------------------------------------------------ */
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-10">
+    <div className="mx-auto max-w-3xl px-6 py-8">
 
-      {/* ---- Greeting ------------------------------------------------ */}
-      <div className="mb-10">
-        <h1 className="font-display text-3xl italic tracking-tight text-foreground">
-          {greeting}, {firstName}
-        </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">{briefing}</p>
-        {termName && <p className="mt-0.5 text-xs text-muted-foreground/50">{termName}</p>}
+      {/* ---- Header -------------------------------------------------- */}
+      <div className="mb-6 flex items-baseline justify-between">
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight">
+            {greeting}, {firstName}
+          </h1>
+          {termName && (
+            <p className="mt-0.5 text-xs text-muted-foreground/60">{termName}</p>
+          )}
+        </div>
+        <div className="flex items-center gap-3 text-sm tabular-nums text-muted-foreground">
+          {stats.dueThisWeek > 0 && (
+            <span>{stats.dueThisWeek} due this week</span>
+          )}
+        </div>
       </div>
 
-      {/* ---- Up Next ------------------------------------------------- */}
-      {nextUp && nextUpMeta ? (
-        <div className={`card-lift mb-8 rounded-xl border border-border/50 border-l-4 ${nextUpMeta.border} bg-card p-5`}>
-          <div className="flex items-start gap-4">
-            <button
-              onClick={(e) => toggleOverride(e, nextUp.id)}
-              className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-muted-foreground/30 transition-colors hover:border-emerald-500 hover:bg-emerald-500/10"
-              title="Mark as done"
-            />
-            <Link href={`/assignment/${nextUp.id}?courseId=${nextUp.course_id}`} className="min-w-0 flex-1">
-              <div className="flex items-center justify-between">
-                <span className={`text-[11px] font-bold uppercase tracking-wider ${nextUpMeta.text}`}>
-                  {nextUpMeta.label}
-                </span>
-                <span className={`text-sm font-semibold tabular-nums ${nextUpMeta.text}`}>
-                  {nextUpMeta.relTime}
-                </span>
-              </div>
-              <p className="mt-2.5 text-lg font-semibold tracking-tight">{nextUp.name}</p>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                {courseNameMap[nextUp.course_id]}
-                {nextUp.points_possible != null && ` \u00b7 ${nextUp.points_possible} pts`}
-              </p>
-            </Link>
-          </div>
-        </div>
-      ) : (
-        <div className="card-lift mb-8 rounded-xl border border-border/50 border-l-4 border-l-emerald-500 bg-card p-5">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/10">
-              <svg className="h-4 w-4 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">All caught up</p>
-              <p className="text-xs text-muted-foreground">No upcoming assignments need your attention.</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ---- Stats --------------------------------------------------- */}
+      {/* ---- Stats strip --------------------------------------------- */}
       <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {/* GPA */}
-        <div className="card-lift rounded-xl border border-border/50 bg-card px-4 py-3.5">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">GPA</p>
+        <div className="rounded-lg border border-border/60 bg-card px-4 py-3.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Average</span>
           <div className="mt-1 flex items-baseline gap-1.5">
             <span className="text-2xl font-bold tabular-nums tracking-tight">
               {averageGrade != null ? `${averageGrade}%` : "--"}
@@ -338,12 +260,13 @@ export function DashboardContent({
         </div>
 
         {/* Completed */}
-        <div className="card-lift rounded-xl border border-border/50 bg-card px-4 py-3.5">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Completed</p>
-          <span className="mt-1 block text-2xl font-bold tabular-nums tracking-tight">
-            {stats.completedCount}<span className="text-base font-medium text-muted-foreground">/{stats.totalCount}</span>
-          </span>
-          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
+        <div className="rounded-lg border border-border/60 bg-card px-4 py-3.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Completed</span>
+          <div className="mt-1 flex items-baseline gap-1">
+            <span className="text-2xl font-bold tabular-nums tracking-tight">{stats.completedCount}</span>
+            <span className="text-sm text-muted-foreground">/ {stats.totalCount}</span>
+          </div>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
             <div
               className="h-full rounded-full bg-primary transition-all duration-500"
               style={{ width: `${stats.completionPct}%` }}
@@ -351,62 +274,149 @@ export function DashboardContent({
           </div>
         </div>
 
-        {/* Due This Week */}
-        <div className="card-lift rounded-xl border border-border/50 bg-card px-4 py-3.5">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">This Week</p>
+        {/* This Week */}
+        <div className="rounded-lg border border-border/60 bg-card px-4 py-3.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">This Week</span>
           <span className="mt-1 block text-2xl font-bold tabular-nums tracking-tight">{stats.dueThisWeek}</span>
-          <p className="text-[11px] text-muted-foreground">assignments due</p>
         </div>
 
         {/* Missing */}
-        <div className={`rounded-xl border bg-card px-4 py-3.5 card-lift ${
-          stats.missing > 0 ? "border-red-500/20" : "border-border/50"
+        <div className={`rounded-lg border bg-card px-4 py-3.5 ${
+          stats.missing > 0 ? "border-red-500/30" : "border-border/60"
         }`}>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Missing</p>
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Missing</span>
           <span className={`mt-1 block text-2xl font-bold tabular-nums tracking-tight ${
             stats.missing > 0
-              ? "text-red-600 dark:text-red-400"
-              : "text-emerald-600 dark:text-emerald-400"
+              ? "text-red-500"
+              : "text-emerald-500"
           }`}>
             {stats.missing}
           </span>
-          {stats.missing === 0 && (
-            <p className="text-[11px] text-emerald-600 dark:text-emerald-400">all clear</p>
-          )}
         </div>
       </div>
 
-      {/* ---- Course Grades ------------------------------------------- */}
+      {/* ---- What's Due (HERO section) ------------------------------- */}
+      <section className="mb-8">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            What&apos;s Due
+          </h2>
+          <Link href="/assignments" className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors">
+            View all
+          </Link>
+        </div>
+
+        {upcoming.length === 0 ? (
+          <div className="flex items-center gap-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-4 py-4">
+            <svg className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+            </svg>
+            <div>
+              <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">All caught up</p>
+              <p className="text-xs text-muted-foreground">Nothing needs your attention right now.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-lg border border-border/60 bg-card">
+            {/* Overdue items */}
+            {overdue.length > 0 && (
+              <>
+                <div className="border-b border-red-500/15 bg-red-500/8 px-4 py-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-red-500">
+                    Overdue
+                  </span>
+                  <span className="ml-2 text-xs text-red-500/60">{overdue.length}</span>
+                </div>
+                {overdue.map((a, i) => (
+                  <AssignmentRow
+                    key={a.id}
+                    assignment={a}
+                    courseNameMap={courseNameMap}
+                    now={now}
+                    onToggle={toggleOverride}
+                    showBorder={i > 0}
+                    urgencyOverride="overdue"
+                  />
+                ))}
+              </>
+            )}
+
+            {/* Future items */}
+            {future.slice(0, 12).map((a, i) => {
+              const hoursUntil = (new Date(a.due_at!).getTime() - now) / 3600000;
+              const prevHoursUntil = i > 0 ? (new Date(future[i - 1].due_at!).getTime() - now) / 3600000 : null;
+              const urg = urgencyLabel(hoursUntil);
+              const prevUrg = prevHoursUntil !== null ? urgencyLabel(prevHoursUntil) : null;
+              const showGroupHeader = !prevUrg || prevUrg.label !== urg.label;
+
+              return (
+                <div key={a.id}>
+                  {showGroupHeader && (
+                    <div className="border-t border-border/40 bg-muted/40 px-4 py-2">
+                      <span className={`text-xs font-bold uppercase tracking-wider ${urg.text}`}>
+                        {urg.label}
+                      </span>
+                    </div>
+                  )}
+                  <AssignmentRow
+                    assignment={a}
+                    courseNameMap={courseNameMap}
+                    now={now}
+                    onToggle={toggleOverride}
+                    showBorder={!showGroupHeader}
+                  />
+                </div>
+              );
+            })}
+
+            {future.length > 12 && (
+              <Link href="/assignments">
+                <div className="border-t border-border/40 px-4 py-2.5 text-center">
+                  <span className="text-xs text-muted-foreground hover:text-foreground">
+                    +{future.length - 12} more assignments
+                  </span>
+                </div>
+              </Link>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* ---- Courses ------------------------------------------------- */}
       {gradeData.length > 0 && (
-        <section className="mb-8">
-          <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Courses</h2>
-          <div className="grid grid-cols-2 gap-3">
-            {gradeData.map((course) => {
+        <section className="mb-6">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Courses</h2>
+          <div className="overflow-hidden rounded-lg border border-border/60 bg-card">
+            {gradeData.map((course, i) => {
               const gc = gradeColor(course.score);
               const pending = pendingByCourse[course.courseId] || 0;
               return (
                 <Link key={course.courseId} href={`/course/${course.courseId}`}>
-                  <div className="rounded-xl border border-border/50 bg-card px-4 py-3.5 card-lift">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="min-w-0 truncate text-sm font-medium">{course.name}</p>
-                      <span className={`shrink-0 text-lg font-bold tabular-nums ${gc.text}`}>
+                  <div className={`flex items-center gap-4 px-4 py-3 transition-colors hover:bg-accent/30 ${i > 0 ? "border-t border-border/40" : ""}`}>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{course.name}</p>
+                      <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>{letterGradeFromScore(course.score)}</span>
+                        {pending > 0 && (
+                          <>
+                            <span className="text-border">·</span>
+                            <span>{pending} pending</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="hidden w-24 sm:block">
+                        <div className="h-1 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className={`h-full rounded-full ${gc.bar} transition-all duration-500`}
+                            style={{ width: `${course.score}%` }}
+                          />
+                        </div>
+                      </div>
+                      <span className={`w-12 text-right text-sm font-bold tabular-nums ${gc.text}`}>
                         {course.score}%
                       </span>
-                    </div>
-                    <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <span>{letterGradeFromScore(course.score)}</span>
-                      {pending > 0 && (
-                        <>
-                          <span className="text-border">·</span>
-                          <span>{pending} pending</span>
-                        </>
-                      )}
-                    </div>
-                    <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className={`h-full rounded-full ${gc.bar} transition-all duration-500`}
-                        style={{ width: `${course.score}%` }}
-                      />
                     </div>
                   </div>
                 </Link>
@@ -417,145 +427,67 @@ export function DashboardContent({
       )}
 
       {/* ---- Charts -------------------------------------------------- */}
-      <section className="mb-8 grid gap-4 sm:grid-cols-2">
+      <section className="grid gap-4 sm:grid-cols-2">
         <WorkloadChart data={weeklyBuckets} />
         <CompletionRing data={completionData} completionPct={stats.completionPct} />
-      </section>
-
-      {/* ---- Grouped Upcoming ---------------------------------------- */}
-      <section>
-        <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Upcoming</h2>
-
-        {!hasUpcoming ? (
-          <div className="rounded-xl border border-dashed py-10 text-center">
-            <p className="text-sm text-muted-foreground">Nothing coming up.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <UpcomingGroup
-              label="Today"
-              items={groups.today}
-              courseNameMap={courseNameMap}
-              onToggle={toggleOverride}
-              labelClass="text-red-600 dark:text-red-400"
-              countClass="bg-red-500/10 text-red-600 dark:text-red-400"
-              borderClass="border-red-500/20"
-              showTime
-            />
-            <UpcomingGroup
-              label="Tomorrow"
-              items={groups.tomorrow}
-              courseNameMap={courseNameMap}
-              onToggle={toggleOverride}
-              labelClass="text-orange-600 dark:text-orange-400"
-              countClass="bg-orange-500/10 text-orange-600 dark:text-orange-400"
-              borderClass="border-orange-500/15"
-              showTime
-            />
-            <UpcomingGroup
-              label="This Week"
-              items={groups.thisWeek}
-              courseNameMap={courseNameMap}
-              onToggle={toggleOverride}
-              labelClass="text-muted-foreground"
-              countClass="bg-muted text-muted-foreground"
-              borderClass="border-border/50"
-              showDate
-            />
-            <UpcomingGroup
-              label="Later"
-              items={groups.later}
-              courseNameMap={courseNameMap}
-              onToggle={toggleOverride}
-              labelClass="text-muted-foreground"
-              countClass="bg-muted text-muted-foreground"
-              borderClass="border-border/50"
-              showDate
-              limit={8}
-            />
-          </div>
-        )}
       </section>
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Upcoming group section                                             */
+/*  Assignment row                                                     */
 /* ------------------------------------------------------------------ */
 
-function UpcomingGroup({
-  label,
-  items,
+function AssignmentRow({
+  assignment: a,
   courseNameMap,
-  labelClass,
-  countClass,
-  borderClass,
-  showTime,
-  showDate,
-  limit,
+  now,
   onToggle,
+  showBorder,
+  urgencyOverride,
 }: {
-  label: string;
-  items: Assignment[];
+  assignment: Assignment;
   courseNameMap: Record<number, string>;
-  labelClass: string;
-  countClass: string;
-  borderClass: string;
-  showTime?: boolean;
-  showDate?: boolean;
-  limit?: number;
+  now: number;
   onToggle: (e: React.MouseEvent, id: number) => void;
+  showBorder: boolean;
+  urgencyOverride?: "overdue";
 }) {
-  if (items.length === 0) return null;
-  const visible = limit ? items.slice(0, limit) : items;
-  const overflow = limit && items.length > limit ? items.length - limit : 0;
+  const hoursUntil = (new Date(a.due_at!).getTime() - now) / 3600000;
+  const relTime = formatRelativeTime(a.due_at!, now);
+  const isOverdue = urgencyOverride === "overdue" || hoursUntil <= 0;
 
   return (
-    <div>
-      <div className="mb-2 flex items-center gap-2">
-        <span className={`text-xs font-bold uppercase tracking-wider ${labelClass}`}>{label}</span>
-        <span className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold ${countClass}`}>
-          {items.length}
-        </span>
-      </div>
-      <div className={`rounded-xl border ${borderClass} bg-card card-lift`}>
-        {visible.map((a, i) => (
-          <div key={a.id} className={`flex items-center gap-3 px-4 py-3 transition-colors hover:bg-accent/30 ${i > 0 ? "border-t border-border/50" : ""}`}>
-            <button
-              onClick={(e) => onToggle(e, a.id)}
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-muted-foreground/30 transition-colors hover:border-emerald-500 hover:bg-emerald-500/10"
-              title="Mark as done"
-            />
-            <Link href={`/assignment/${a.id}?courseId=${a.course_id}`} className="flex min-w-0 flex-1 items-center gap-4">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{a.name}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{courseNameMap[a.course_id]}</p>
-              </div>
-              <div className="shrink-0 text-right">
-                {showTime && a.due_at && (
-                  <p className="text-xs font-medium tabular-nums">{formatDueTime(a.due_at)}</p>
-                )}
-                {showDate && a.due_at && (
-                  <p className="text-xs tabular-nums text-muted-foreground">{formatDueShort(a.due_at)}</p>
-                )}
-                {a.points_possible != null && (
-                  <p className="text-[11px] text-muted-foreground">{a.points_possible} pts</p>
-                )}
-              </div>
-            </Link>
+    <div className={`flex items-center gap-3 px-4 py-3 transition-colors hover:bg-accent/30 ${showBorder ? "border-t border-border/30" : ""}`}>
+      <button
+        onClick={(e) => onToggle(e, a.id)}
+        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-muted-foreground/30 transition-colors hover:border-emerald-500 hover:bg-emerald-500/10"
+        title="Mark as done"
+      />
+      <Link href={`/assignment/${a.id}?courseId=${a.course_id}`} className="flex min-w-0 flex-1 items-center gap-4">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium">{a.name}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{courseNameMap[a.course_id]}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-4 text-right">
+          {a.points_possible != null && (
+            <span className="hidden text-xs text-muted-foreground sm:inline">{a.points_possible} pts</span>
+          )}
+          <div className="w-20 text-right">
+            {hoursUntil > 24 ? (
+              <p className="text-xs text-muted-foreground">{formatDueShort(a.due_at!)}</p>
+            ) : (
+              <>
+                <p className={`text-sm font-semibold tabular-nums ${isOverdue ? "text-red-500" : "text-foreground"}`}>
+                  {relTime}
+                </p>
+                <p className="text-[11px] text-muted-foreground">{formatDueTime(a.due_at!)}</p>
+              </>
+            )}
           </div>
-        ))}
-        {overflow > 0 && (
-          <Link href="/assignments">
-            <div className="border-t border-border/50 px-4 py-2.5 text-center">
-              <span className="text-xs font-medium text-muted-foreground hover:text-foreground">
-                +{overflow} more
-              </span>
-            </div>
-          </Link>
-        )}
-      </div>
+        </div>
+      </Link>
     </div>
   );
 }

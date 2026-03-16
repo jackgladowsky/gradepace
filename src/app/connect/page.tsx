@@ -38,15 +38,18 @@ export default function ConnectPage() {
     <div className="flex min-h-screen flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <Link href="/" className="text-sm font-semibold tracking-tight">
-            GradePace
-          </Link>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Connect your Canvas account
+          <div className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <svg className="h-4 w-4 text-primary-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a23.54 23.54 0 0 0-2.688 6.413A23.654 23.654 0 0 0 12 23.25a23.654 23.654 0 0 0 8.429-3.69 23.54 23.54 0 0 0-2.688-6.413m-15.482 0A47.71 47.71 0 0 1 12 7.443a47.71 47.71 0 0 1 7.741 2.704M12 2.25c-2.676 0-5.216.584-7.499 1.632m14.998 0A17.919 17.919 0 0 0 12 2.25" />
+            </svg>
+          </div>
+          <h1 className="text-lg font-semibold tracking-tight">GradePace</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Connect your Canvas account to get started
           </p>
         </div>
 
-        <div className="rounded-lg border p-5">
+        <div className="rounded-lg border border-border/60 bg-card p-5">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="canvasUrl" className="text-xs font-medium">
@@ -58,7 +61,7 @@ export default function ConnectPage() {
                     key={school.url}
                     type="button"
                     onClick={() => setCanvasUrl(school.url)}
-                    className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                    className={`rounded px-2.5 py-1 text-[11px] font-medium transition-colors ${
                       canvasUrl === school.url
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted text-muted-foreground hover:text-foreground"
@@ -110,6 +113,25 @@ export default function ConnectPage() {
               {loading ? "Connecting..." : "Connect"}
             </Button>
           </form>
+        </div>
+
+        {/* Trust signals */}
+        <div className="mt-4 rounded-lg border border-border/40 bg-card/50 px-4 py-3">
+          <div className="flex items-start gap-2.5">
+            <svg className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+            </svg>
+            <div>
+              <p className="text-[11px] font-medium text-foreground/80">Your token stays on your device</p>
+              <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">
+                Your API token is stored in an encrypted, HTTP-only session cookie. It&apos;s never saved to a database or shared with anyone. GradePace is{" "}
+                <Link href="https://github.com/jackgladowsky/studyhub" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+                  open source
+                </Link>
+                {" "}&mdash; you can verify this yourself.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

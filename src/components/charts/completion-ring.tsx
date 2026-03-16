@@ -26,18 +26,18 @@ export function CompletionRing({ data, completionPct }: { data: CompletionData; 
   if (chartData.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-border/50 bg-card p-5 card-lift">
-      <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Assignment Completion</h3>
-      <div className="flex items-center gap-6">
-        <div className="relative h-[140px] w-[140px] shrink-0">
+    <div className="rounded-lg border border-border/60 bg-card p-4">
+      <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Completion</h3>
+      <div className="flex items-center gap-4">
+        <div className="relative h-[100px] w-[100px] shrink-0">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={42}
-                outerRadius={62}
+                innerRadius={32}
+                outerRadius={46}
                 paddingAngle={2}
                 dataKey="value"
                 stroke="none"
@@ -49,16 +49,15 @@ export function CompletionRing({ data, completionPct }: { data: CompletionData; 
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-xl font-semibold tabular-nums">{completionPct}%</span>
-            <span className="text-[10px] text-muted-foreground">done</span>
+            <span className="text-lg font-bold tabular-nums">{completionPct}%</span>
           </div>
         </div>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1">
           {chartData.map((d) => (
-            <div key={d.name} className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-              <span className="text-xs text-muted-foreground">{d.name}</span>
-              <span className="text-xs font-medium tabular-nums">{d.value}</span>
+            <div key={d.name} className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: d.color }} />
+              <span className="text-[11px] text-muted-foreground">{d.name}</span>
+              <span className="text-[11px] font-medium tabular-nums">{d.value}</span>
             </div>
           ))}
         </div>

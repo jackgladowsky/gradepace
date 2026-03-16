@@ -175,7 +175,7 @@ function saveSidebarState(state: SidebarState) {
 function Chevron({ open }: { open: boolean }) {
   return (
     <svg
-      className={`h-3.5 w-3.5 text-muted-foreground/60 transition-transform duration-200 ${open ? "rotate-90" : ""}`}
+      className={`h-3 w-3 text-muted-foreground/50 transition-transform duration-150 ${open ? "rotate-90" : ""}`}
       fill="none"
       viewBox="0 0 24 24"
       strokeWidth={2}
@@ -218,14 +218,14 @@ export function SidebarLayout({ courses, userName, children }: SidebarProps) {
       <Link
         href={item.href}
         onClick={() => setMobileOpen(false)}
-        className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
+        className={`relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-all duration-150 ${
           active
             ? "bg-accent text-foreground"
             : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
         }`}
       >
         {active && (
-          <span className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
+          <span className="absolute left-0 top-1/2 h-3.5 w-[2px] -translate-y-1/2 rounded-full bg-primary" />
         )}
         {item.icon}
         {item.label}
@@ -245,17 +245,17 @@ export function SidebarLayout({ courses, userName, children }: SidebarProps) {
   const sidebar = (
     <div className="flex h-full flex-col">
       {/* Logo */}
-      <div className="flex h-14 items-center gap-2.5 border-b border-border/50 px-5">
-        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary">
-          <svg className="h-3.5 w-3.5 text-primary-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+      <div className="flex h-12 items-center gap-2 border-b border-border/40 px-4">
+        <div className="flex h-5.5 w-5.5 items-center justify-center rounded bg-primary">
+          <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a23.54 23.54 0 0 0-2.688 6.413A23.654 23.654 0 0 0 12 23.25a23.654 23.654 0 0 0 8.429-3.69 23.54 23.54 0 0 0-2.688-6.413m-15.482 0A47.71 47.71 0 0 1 12 7.443a47.71 47.71 0 0 1 7.741 2.704M12 2.25c-2.676 0-5.216.584-7.499 1.632m14.998 0A17.919 17.919 0 0 0 12 2.25" />
           </svg>
         </div>
-        <span className="text-base font-bold tracking-tight">GradePace</span>
+        <span className="text-sm font-bold tracking-tight">GradePace</span>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
+      <nav className="flex-1 overflow-y-auto px-2.5 py-3">
         {/* Main */}
         <div className="space-y-0.5">
           {MAIN_NAV.map((item) => (
@@ -265,24 +265,24 @@ export function SidebarLayout({ courses, userName, children }: SidebarProps) {
 
         {/* Course list */}
         {courses.length > 0 && (
-          <div className="mt-5">
+          <div className="mt-4">
             <button
               onClick={() => toggle("courses")}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 transition-colors hover:bg-accent/50"
+              className="flex w-full items-center gap-1.5 rounded-md px-2.5 py-1 transition-colors hover:bg-accent/50"
             >
               <Chevron open={sections.courses} />
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                 Your Courses
               </span>
             </button>
             {sections.courses && (
-              <div className="mt-1 space-y-0.5">
+              <div className="mt-0.5 space-y-px">
                 {courses.map((course) => (
                   <Link
                     key={course.id}
                     href={`/course/${course.id}`}
                     onClick={() => setMobileOpen(false)}
-                    className={`block truncate rounded-lg px-3 py-1.5 text-[13px] transition-colors ${
+                    className={`block truncate rounded-md px-2.5 py-1.5 text-[12px] transition-colors ${
                       pathname === `/course/${course.id}`
                         ? "bg-accent font-medium text-foreground"
                         : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
@@ -297,18 +297,18 @@ export function SidebarLayout({ courses, userName, children }: SidebarProps) {
         )}
 
         {/* Tools section */}
-        <div className="mt-3">
+        <div className="mt-2">
           <button
             onClick={() => toggle("tools")}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 transition-colors hover:bg-accent/50"
+            className="flex w-full items-center gap-1.5 rounded-md px-2.5 py-1 transition-colors hover:bg-accent/50"
           >
             <Chevron open={sections.tools} />
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
               Tools
             </span>
           </button>
           {sections.tools && (
-            <div className="mt-1 space-y-0.5">
+            <div className="mt-0.5 space-y-0.5">
               {TOOLS_NAV.map((item) => (
                 <NavLink key={item.href} item={item} />
               ))}
@@ -318,18 +318,18 @@ export function SidebarLayout({ courses, userName, children }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-border/50 px-3 py-3">
-        <div className="flex items-center justify-between px-2">
-          <span className="truncate text-xs text-muted-foreground">{userName}</span>
-          <div className="flex items-center gap-0.5">
+      <div className="border-t border-border/40 px-2.5 py-2.5">
+        <div className="flex items-center justify-between px-1.5">
+          <span className="truncate text-[11px] text-muted-foreground/70">{userName}</span>
+          <div className="flex items-center gap-px">
             <ThemeToggle />
             <form action={disconnect}>
               <button
                 type="submit"
-                className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                className="rounded-md p-1.5 text-muted-foreground/60 transition-colors hover:bg-accent hover:text-foreground"
                 title="Log out"
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
                 </svg>
               </button>
@@ -343,16 +343,16 @@ export function SidebarLayout({ courses, userName, children }: SidebarProps) {
   return (
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-56 shrink-0 border-r border-border/50 bg-card md:block">
+      <aside className="sticky top-0 hidden h-screen w-52 shrink-0 border-r border-border/40 bg-card md:block">
         {sidebar}
       </aside>
 
       {/* Mobile header + overlay */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/50 bg-background/80 px-4 backdrop-blur-md md:hidden">
+        <header className="sticky top-0 z-30 flex h-12 items-center gap-2.5 border-b border-border/40 bg-background/80 px-4 backdrop-blur-md md:hidden">
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-accent"
+            className="rounded-md p-1 text-muted-foreground hover:bg-accent"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -369,8 +369,8 @@ export function SidebarLayout({ courses, userName, children }: SidebarProps) {
         {/* Mobile drawer */}
         {mobileOpen && (
           <>
-            <div className="fixed inset-0 z-40 bg-black/40 md:hidden" onClick={() => setMobileOpen(false)} />
-            <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-card shadow-xl md:hidden">
+            <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={() => setMobileOpen(false)} />
+            <aside className="fixed inset-y-0 left-0 z-50 w-56 bg-card shadow-xl md:hidden">
               {sidebar}
             </aside>
           </>
