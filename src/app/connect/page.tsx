@@ -125,7 +125,7 @@ export default function ConnectPage() {
               <p className="text-[11px] font-medium text-foreground/80">Your token stays on your device</p>
               <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">
                 Your API token is stored in an encrypted, HTTP-only session cookie. It&apos;s never saved to a database or shared with anyone. GradePace is{" "}
-                <Link href="https://github.com/jackgladowsky/studyhub" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+                <Link href="https://github.com/jackgladowsky/gradepace" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
                   open source
                 </Link>
                 {" "}&mdash; you can verify this yourself.
